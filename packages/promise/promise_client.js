@@ -1,0 +1,1 @@
+../../dev_bundle/server-lib/node_modules/meteor-promise/promise_client.js
