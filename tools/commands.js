@@ -8,7 +8,6 @@ var auth = require('./auth.js');
 var authClient = require('./auth-client.js');
 var config = require('./config.js');
 var release = require('./release.js');
-var Future = require('fibers/future');
 var runLog = require('./run-log.js');
 var packageClient = require('./package-client.js');
 var utils = require('./utils.js');
@@ -2033,7 +2032,6 @@ main.registerCommand({
   maybeLog("Connecting: " + Console.command("ssh " + printOptions));
 
   var child_process = require('child_process');
-  var future = new Future;
 
   if (arch.match(/win/)) {
     // The ssh output from Windows machines is buggy, it can overlay your
@@ -2046,32 +2044,27 @@ main.registerCommand({
     "ssh", connOptions,
     { stdio: 'inherit' }); // Redirect spawn stdio to process
 
-  sshCommand.on('error', function (err) {
-    if (err.code === "ENOENT") {
-      if (process.platform === "win32") {
-        Console.error("Could not find the `ssh` command in your PATH.",
-          "Please read this page about using the get-machine command on Windows:",
-          Console.url("https://github.com/meteor/meteor/wiki/Accessing-Meteor-provided-build-machines-from-Windows"));
-      } else {
-        Console.error("Could not find the `ssh` command in your PATH.");
+  return new Promise(function (resolve) {
+    sshCommand.on('error', function (err) {
+      if (err.code === "ENOENT") {
+        if (process.platform === "win32") {
+          Console.error("Could not find the `ssh` command in your PATH.",
+                        "Please read this page about using the get-machine command on Windows:",
+                        Console.url("https://github.com/meteor/meteor/wiki/Accessing-Meteor-provided-build-machines-from-Windows"));
+        } else {
+          Console.error("Could not find the `ssh` command in your PATH.");
+        }
+
+        resolve(1);
       }
+    });
 
-      future.return(1);
-    }
-  });
-
-  sshCommand.on('exit', function (code, signal) {
-    if (signal) {
+    sshCommand.on('exit', function (code, signal) {
       // XXX: We should process the signal in some way, but I am not sure we
       // care right now.
-      future.return(1);
-    } else {
-      future.return(code);
-    }
-  });
-  var sshEnd = future.wait();
-
-  return sshEnd;
+      resolve(signal ? 1 : code);
+    });
+  }).await();
 });
 
 
@@ -2090,7 +2083,6 @@ main.registerCommand({
   catalogRefresh: new catalog.Refresh.Never()
 }, function (options) {
   buildmessage.enterJob({ title: "A test progressbar" }, function () {
-    var doneFuture = new Future;
     var progress = buildmessage.getCurrentProgressTracker();
     var totalProgress = { current: 0, end: options.secs, done: false };
     var i = 0;
@@ -2100,23 +2092,25 @@ main.registerCommand({
       totalProgress.end = undefined;
     }
 
-    var updateProgress = function () {
-      i++;
-      if (! options.spinner) {
-        totalProgress.current = i;
+    new Promise(function (resolve) {
+      function updateProgress() {
+        i++;
+        if (! options.spinner) {
+          totalProgress.current = i;
+        }
+
+        if (i === n) {
+          totalProgress.done = true;
+          progress.reportProgress(totalProgress);
+          resolve();
+        } else {
+          progress.reportProgress(totalProgress);
+          setTimeout(updateProgress, 1000);
+        }
       }
 
-      if (i === n) {
-        totalProgress.done = true;
-        progress.reportProgress(totalProgress);
-        doneFuture.return();
-      } else {
-        progress.reportProgress(totalProgress);
-        setTimeout(updateProgress, 1000);
-      }
-    };
-    setTimeout(updateProgress);
-    doneFuture.wait();
+      setTimeout(updateProgress);
+    }).await();
   });
 });
 
