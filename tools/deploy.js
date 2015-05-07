@@ -12,7 +12,6 @@ var config = require('./config.js');
 var auth = require('./auth.js');
 var utils = require('./utils.js');
 var _ = require('underscore');
-var Future = require('fibers/future');
 var stats = require('./stats.js');
 var Console = require('./console.js').Console;
 

@@ -7,7 +7,6 @@ var warehouse = require('./warehouse.js');
 var auth = require('./auth.js');
 var config = require('./config.js');
 var release = require('./release.js');
-var Future = require('fibers/future');
 var runLog = require('./run-log.js');
 var packageClient = require('./package-client.js');
 var utils = require('./utils.js');

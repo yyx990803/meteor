@@ -11,7 +11,6 @@ var isopackets = require("./isopackets.js");
 var isopackCacheModule = require('./isopack-cache.js');
 var packageMapModule = require('./package-map.js');
 var colonConverter = require('./colon-converter.js');
-var Future = require('fibers/future');
 var Console = require('./console.js').Console;
 var Profile = require('./profile.js').Profile;
 
