@@ -6,7 +6,6 @@ var chalk = require('chalk');
 var files = require('./files.js');
 var buildmessage = require('./buildmessage.js');
 var projectContextModule = require('./project-context.js');
-var Future = require('fibers/future');
 var utils = require('./utils.js');
 var archinfo = require('./archinfo.js');
 var tropohouse = require('./tropohouse.js');
@@ -1301,25 +1300,26 @@ var execCordovaOnPlatform = function (projectContext, platformName, options) {
 
     // XXX: We should also dump adb.sh
 
-    var future = new Future;
-    execFileAsyncOrThrow(localAdb,
-                         ['logcat', '-c'],
-                         { env: buildCordovaEnv() },
-                         function (err, code) {
-                           if (!future.isResolved()) {
-                             if (err) future['throw'](err);
-                             else future['return'](code);
-                           }
-                         });
-    setTimeout(function () {
-      if (! future.isResolved()) {
-        verboseLog('adb logcat -c timed out');
-        future.throw(new Error("clearing logs of Android device timed out: adb logcat -c"));
-      }
-    }, 5000);
+    var promise = new Promise(function (resolve, reject) {
+      var isResolved = false;
+
+      execFileAsyncOrThrow(localAdb, ['logcat', '-c'], {
+        env: buildCordovaEnv()
+      }, function (err, code) {
+        isResolved = true;
+        err ? reject(err) : resolve(code);
+      });
+
+      setTimeout(function () {
+        if (! isResolved) {
+          verboseLog('adb logcat -c timed out');
+          reject(new Error("clearing logs of Android device timed out: adb logcat -c"));
+        }
+      }, 5000);
+    });
 
     try {
-      future.wait();
+      promise.await();
     } catch (err) {
       // ignore errors from clearing logs, too much trouble baby-sitting logcat
       verboseLog('Clearing logs failed:', err.stack);
