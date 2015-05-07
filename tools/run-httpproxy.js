@@ -3,7 +3,6 @@
 // This is a generic HTTP proxy, like a mini-Squid
 // (whereas run-proxy.js is just for our app)
 var _ = require('underscore');
-var Future = require('fibers/future');
 var runLog = require('./run-log.js');
 var url = require('url');
 
@@ -65,7 +64,11 @@ _.extend(HttpProxy.prototype, {
       self._tryHandleConnections();
     });
 
-    var fut = new Future;
+    var allowStart;
+    var promise = new Promise(function (resolve) {
+      allowStart = resolve;
+    });
+
     self.server.on('error', function (err) {
       if (err.code === 'EADDRINUSE') {
         var port = self.listenPort;
@@ -85,8 +88,7 @@ _.extend(HttpProxy.prototype, {
         runLog.log('' + err);
       }
       self.onFailure();
-      // Allow start() to return.
-      fut.isResolved() || fut['return']();
+      allowStart();
     });
 
     // Don't crash if the app doesn't respond; instead return an error
@@ -111,10 +113,10 @@ _.extend(HttpProxy.prototype, {
         // necessary.
         server.close();
       }
-      fut.isResolved() || fut['return']();
+      allowStart();
     });
 
-    fut.wait();
+    promise.await();
   },
 
   // Idempotent.
