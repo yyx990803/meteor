@@ -1,6 +1,6 @@
 var path = Npm.require('path');
 var Fiber = Npm.require('fibers');
-var Future = Npm.require(path.join('fibers', 'future'));
+var Promise = Npm.require('meteor-promise');
 
 Meteor._noYieldsAllowed = function (f) {
   var savedYield = Fiber.yield;
@@ -65,20 +65,23 @@ _.extend(Meteor._SynchronousQueue.prototype, {
         throw new Error("Can only call runTask in a Fiber");
     }
 
-    var fut = new Future;
-    var handle = {
-      task: Meteor.bindEnvironment(task, function (e) {
-        Meteor._debug("Exception from task:", e && e.stack || e);
-        throw e;
-      }),
-      future: fut,
-      name: task.name
-    };
-    self._taskHandles.push(handle);
-    self._scheduleRun();
+    new Promise(function (resolve, reject) {
+      self._taskHandles.push({
+        task: Meteor.bindEnvironment(task, function (e) {
+          Meteor._debug("Exception from task:", e && e.stack || e);
+          throw e;
+        }),
+        future: {
+          resolve: resolve,
+          reject: reject
+        },
+        name: task.name
+      });
+
+      self._scheduleRun();
     // Yield. We'll get back here after the task is run (and will throw if the
     // task throws).
-    fut.wait();
+    }).await();
   },
   queueTask: function (task) {
     var self = this;
@@ -162,10 +165,11 @@ _.extend(Meteor._SynchronousQueue.prototype, {
     // If this was queued with runTask, let the runTask call return (throwing if
     // the task threw).
     if (taskHandle.future) {
-      if (exception)
-        taskHandle.future['throw'](exception);
-      else
-        taskHandle.future['return']();
+      if (exception) {
+        taskHandle.future.reject(exception);
+      } else {
+        taskHandle.future.resolve();
+      }
     }
   }
 });
@@ -174,9 +178,7 @@ _.extend(Meteor._SynchronousQueue.prototype, {
 // methods).
 //
 Meteor._sleepForMs = function (ms) {
-  var fiber = Fiber.current;
-  setTimeout(function() {
-    fiber.run();
-  }, ms);
-  Fiber.yield();
+  new Promise(function (resolve) {
+    setTimeout(resolve, ms);
+  }).await();
 };
