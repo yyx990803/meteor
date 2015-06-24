@@ -77,8 +77,9 @@ _.extend(AppProcess.prototype, {
   start: function () {
     var self = this;
 
-    if (self.proc)
+    if (self.proc) {
       throw new Error("already started?");
+    }
 
     // Start the app!
     self.proc = self._spawn();
@@ -145,8 +146,9 @@ _.extend(AppProcess.prototype, {
 
   _maybeCallOnExit: function (code, signal) {
     var self = this;
-    if (self.madeExitCallback)
+    if (self.madeExitCallback) {
       return;
+    }
     self.madeExitCallback = true;
     self.onExit && self.onExit(code, signal);
   },
@@ -392,8 +394,9 @@ _.extend(AppRunner.prototype, {
   start: function () {
     var self = this;
 
-    if (self.fiber)
+    if (self.fiber) {
       throw new Error("already started?");
+    }
 
     self.startFuture = new Future;
     // XXX I think it's correct to not try to use bindEnvironment here:
@@ -413,11 +416,13 @@ _.extend(AppRunner.prototype, {
   stop: function () {
     var self = this;
 
-    if (! self.fiber)
-      return; // nothing to do
+    if (! self.fiber) {
+      return;
+    } // nothing to do
 
-    if (self.exitFuture)
+    if (self.exitFuture) {
       throw new Error("another fiber already stopping?");
+    }
 
     // The existence of this future makes the fiber break out of its loop.
     self.exitFuture = new Future;
@@ -589,8 +594,9 @@ _.extend(AppRunner.prototype, {
 
     var bundleResult;
     var bundleResultOrRunResult = bundleApp();
-    if (bundleResultOrRunResult.runResult)
+    if (bundleResultOrRunResult.runResult) {
       return bundleResultOrRunResult.runResult;
+    }
     bundleResult = bundleResultOrRunResult.bundleResult;
 
     // Read the settings file, if any
@@ -600,8 +606,9 @@ _.extend(AppRunner.prototype, {
       title: "preparing to run",
       rootPath: process.cwd()
     }, function () {
-      if (self.settingsFile)
+      if (self.settingsFile) {
         settings = files.getSettings(self.settingsFile, settingsWatchSet);
+      }
     });
     if (settingsMessages.hasMessages()) {
       return {
@@ -652,10 +659,12 @@ _.extend(AppRunner.prototype, {
 
     // Atomically (1) see if we've been stop()'d, (2) if not, create a
     // future that can be used to stop() us once we start running.
-    if (self.exitFuture)
+    if (self.exitFuture) {
       return { outcome: 'stopped' };
-    if (self.runFuture)
+    }
+    if (self.runFuture) {
       throw new Error("already have future?");
+    }
     var runFuture = self.runFuture = new Future;
 
     // Run the program
@@ -681,8 +690,9 @@ _.extend(AppRunner.prototype, {
       onListen: function () {
         self.proxy.setMode("proxy");
         options.onListen && options.onListen();
-        if (self.startFuture)
+        if (self.startFuture) {
           self.startFuture['return']();
+        }
       },
       nodeOptions: getNodeOptionsFromEnvironment(),
       nodePath: _.map(bundleResult.nodePath, files.convertToOSPath),
@@ -742,14 +752,16 @@ _.extend(AppRunner.prototype, {
 
     try {
       while (ret.outcome === 'changed-refreshable') {
-        if (! canRefreshClient)
+        if (! canRefreshClient) {
           throw Error("Can't refresh client?");
+        }
 
         // We stay in this loop as long as only refreshable assets have changed.
         // When ret.refreshable becomes false, we restart the server.
         bundleResultOrRunResult = bundleApp();
-        if (bundleResultOrRunResult.runResult)
+        if (bundleResultOrRunResult.runResult) {
           return bundleResultOrRunResult.runResult;
+        }
         bundleResult = bundleResultOrRunResult.bundleResult;
 
         var oldFuture = self.runFuture = new Future;
@@ -787,8 +799,9 @@ _.extend(AppRunner.prototype, {
 
   _runFutureReturn: function (value) {
     var self = this;
-    if (!self.runFuture)
+    if (!self.runFuture) {
       return;
+    }
     var runFuture = self.runFuture;
     self.runFuture = null;
     runFuture['return'](value);
@@ -796,8 +809,9 @@ _.extend(AppRunner.prototype, {
 
   _watchFutureReturn: function () {
     var self = this;
-    if (!self.watchFuture)
+    if (!self.watchFuture) {
       return;
+    }
     var watchFuture = self.watchFuture;
     self.watchFuture = null;
     watchFuture.return();
@@ -820,8 +834,9 @@ _.extend(AppRunner.prototype, {
 
       var runResult = self._runOnce({
         onListen: function () {
-          if (! self.noRestartBanner && ! firstRun)
+          if (! self.noRestartBanner && ! firstRun) {
             runLog.logRestart();
+          }
         },
         beforeRun: resetCrashCount,
         firstRun: firstRun
@@ -829,12 +844,14 @@ _.extend(AppRunner.prototype, {
       firstRun = false;
 
       clearTimeout(crashTimer);
-      if (runResult.outcome !== "terminated")
+      if (runResult.outcome !== "terminated") {
         crashCount = 0;
+      }
 
       var wantExit = self.onRunEnd ? !self.onRunEnd(runResult) : false;
-      if (wantExit || self.exitFuture || runResult.outcome === "stopped")
+      if (wantExit || self.exitFuture || runResult.outcome === "stopped") {
         break;
+      }
 
       if (runResult.outcome === "wrong-release" ||
           runResult.outcome === "conflicting-versions") {
@@ -856,10 +873,9 @@ _.extend(AppRunner.prototype, {
         }
       }
 
-      else if (runResult.outcome === "changed")
+      else if (runResult.outcome === "changed") {
         continue;
-
-      else if (runResult.outcome === "terminated") {
+      } else if (runResult.outcome === "terminated") {
         if (runResult.signal) {
           runLog.log('Exited from signal: ' + runResult.signal, { arrow: true });
         } else if (runResult.code !== undefined) {
@@ -869,8 +885,9 @@ _.extend(AppRunner.prototype, {
         }
 
         crashCount ++;
-        if (crashCount < 3)
+        if (crashCount < 3) {
           continue;
+        }
 
         if (self.watchForChanges) {
           runLog.log("Your application is crashing. " +
@@ -887,8 +904,9 @@ _.extend(AppRunner.prototype, {
       if (self.watchForChanges) {
         self.watchFuture = new Future;
 
-        if (!runResult.watchSet)
+        if (!runResult.watchSet) {
           throw Error("watching for changes with no watchSet?");
+        }
         var watcher = new watch.Watcher({
           watchSet: runResult.watchSet,
           onChange: function () {
@@ -900,8 +918,9 @@ _.extend(AppRunner.prototype, {
         // on it.
         self.watchFuture && self.watchFuture.wait();
         // While we were waiting, did somebody stop() us?
-        if (self.exitFuture)
+        if (self.exitFuture) {
           break;
+        }
         runLog.log("Modified -- restarting.",  { arrow: true });
         Console.enableProgressDisplay(true);
         continue;
@@ -911,10 +930,12 @@ _.extend(AppRunner.prototype, {
     }
 
     // Giving up for good.
-    if (self.exitFuture)
+    if (self.exitFuture) {
       self.exitFuture['return']();
-    if (self.startFuture)
+    }
+    if (self.startFuture) {
       self.startFuture['return']();
+    }
 
     self.fiber = null;
   }

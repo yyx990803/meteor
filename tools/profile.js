@@ -170,8 +170,9 @@ var bucketTimes = {};
 
 var spaces = function (x) {
   var s = '';
-  for (var i = 0;  i < x;  ++i)
+  for (var i = 0; i < x; ++i) {
     s += '  ';
+  }
   return s;
 };
 
@@ -185,18 +186,21 @@ var start = function () {
 };
 
 var Profile = function (bucketName, f) {
-  if (! enabled)
+  if (! enabled) {
     return f;
+  }
 
   return function (...args) {
-    if (! running)
+    if (! running) {
       return f.apply(this, args);
+    }
 
     var name;
-    if (_.isFunction(bucketName))
+    if (_.isFunction(bucketName)) {
       name = bucketName.apply(this, args);
-    else
+    } else {
       name = bucketName;
+    }
 
     var currentEntry;
     if (Fiber.current) {
@@ -223,7 +227,9 @@ var Profile = function (bucketName, f) {
       currentEntry.pop();
     }
 
-    if (err) throw err;
+    if (err) {
+      throw err;
+    }
   };
 };
 
@@ -308,10 +314,11 @@ var reportOnParent = function (level, entry) {
 };
 
 var reportOn = function (level, entry) {
-  if (hasChildren(entry))
+  if (hasChildren(entry)) {
     reportOnParent(level, entry);
-  else
+  } else {
     reportOnLeaf(level, entry);
+  }
 };
 
 var reportHierarchy = function () {
@@ -361,8 +368,9 @@ var setupReport = function () {
 };
 
 var report = function () {
-  if (! enabled)
+  if (! enabled) {
     return;
+  }
   running = false;
   print(0, '');
   setupReport();

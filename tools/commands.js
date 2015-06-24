@@ -89,10 +89,12 @@ var dontBuildMobileOnWindows = function (platforms, options) {
 // In the future, you should be able to make this default to some
 // other domain you control, rather than 'meteor.com'.
 var qualifySitename = function (site) {
-  if (site.indexOf(".") === -1)
+  if (site.indexOf(".") === -1) {
     site = site + ".meteor.com";
-  while (site.length && site[site.length - 1] === ".")
+  }
+  while (site.length && site[site.length - 1] === ".") {
     site = site.substring(0, site.length - 1);
+  }
   return site;
 };
 
@@ -134,8 +136,9 @@ main.registerCommand({
   catalogRefresh: new catalog.Refresh.Never()
 }, function (options) {
   if (release.current === null) {
-    if (! options.appDir)
+    if (! options.appDir) {
       throw new Error("missing release, but not in an app?");
+    }
     Console.error(
       "This project was created with a checkout of Meteor, rather than an " +
       "official release, and doesn't have a release number associated with " +
@@ -368,8 +371,9 @@ function doRunCommand (options) {
     appPort = appPortMatch[2] ? parseInt(appPortMatch[2]) : null;
   }
 
-  if (options['raw-logs'])
+  if (options['raw-logs']) {
     runLog.setRawLogs(true);
+  }
 
   // Velocity testing. Sets up a DDP connection to the app process and
   // runs phantomjs.
@@ -554,10 +558,11 @@ main.registerCommand({
           return transform(f);
         },
         transformContents: function (contents, f) {
-          if ((/(\.html|\.js|\.css)/).test(f))
+          if ((/(\.html|\.js|\.css)/).test(f)) {
             return new Buffer(transform(contents.toString()));
-          else
+          } else {
             return contents;
+          }
         },
         ignore: [/^local$/]
       });
@@ -616,12 +621,13 @@ main.registerCommand({
   };
 
   var appPathAsEntered;
-  if (options.args.length === 1)
+  if (options.args.length === 1) {
     appPathAsEntered = options.args[0];
-  else if (options.example)
+  } else if (options.example) {
     appPathAsEntered = options.example;
-  else
+  } else {
     throw new main.ShowUsage;
+  }
   var appPath = files.pathResolve(appPathAsEntered);
 
   if (files.exists(appPath)) {
@@ -662,10 +668,11 @@ main.registerCommand({
         return transform(f);
       },
       transformContents: function (contents, f) {
-        if ((/(\.html|\.js|\.css)/).test(f))
+        if ((/(\.html|\.js|\.css)/).test(f)) {
           return new Buffer(transform(contents.toString()));
-        else
+        } else {
           return contents;
+        }
       },
       ignore: [/^local$/, /^\.id$/]
     });
@@ -684,13 +691,15 @@ main.registerCommand({
 
   main.captureAndExit("=> Errors while creating your project", function () {
     projectContext.readProjectMetadata();
-    if (buildmessage.jobHasMessages())
+    if (buildmessage.jobHasMessages()) {
       return;
+    }
 
     projectContext.releaseFile.write(
       release.current.isCheckout() ? "none" : release.current.name);
-    if (buildmessage.jobHasMessages())
+    if (buildmessage.jobHasMessages()) {
       return;
+    }
 
     // Any upgrader that is in this version of Meteor doesn't need to be run on
     // this project.
@@ -705,8 +714,9 @@ main.registerCommand({
 
   {
     var message = appPathAsEntered + ": created";
-    if (options.example && options.example !== appPathAsEntered)
+    if (options.example && options.example !== appPathAsEntered) {
       message += (" (from '" + options.example + "' template)");
+    }
     message += ".\n";
     Console.info(message);
   }
@@ -852,8 +862,9 @@ var buildCommand = function (options) {
           skipIfNoSDK: true
       }));
     } catch (err) {
-      if (err instanceof main.ExitWithCode)
-         throw err;
+      if (err instanceof main.ExitWithCode) {
+        throw err;
+      }
       Console.printError(err, "Error while building for mobile platforms");
       return 1;
     }
@@ -911,8 +922,9 @@ var buildCommand = function (options) {
     return 1;
   }
 
-  if (! options._serverOnly)
+  if (! options._serverOnly) {
     files.mkdir_p(outputPath);
+  }
 
   if (! options.directory) {
     try {
@@ -937,7 +949,9 @@ var buildCommand = function (options) {
     var platformPath = files.pathJoin(outputPath, platformName);
 
     if (platformName === 'ios') {
-      if (process.platform !== 'darwin') return;
+      if (process.platform !== 'darwin') {
+        return;
+      }
       files.cp_r(buildPath, files.pathJoin(platformPath, 'project'));
       files.writeFile(
         files.pathJoin(platformPath, 'README'),
@@ -1018,15 +1032,17 @@ main.registerCommand({
     mongoUrl = deploy.temporaryMongoUrl(site);
     usedMeteorAccount = true;
 
-    if (! mongoUrl)
+    if (! mongoUrl) {
       // temporaryMongoUrl() will have printed an error message
       return 1;
+    }
   }
   if (options.url) {
     console.log(mongoUrl);
   } else {
-    if (usedMeteorAccount)
+    if (usedMeteorAccount) {
       auth.maybePrintRegistrationLink();
+    }
     process.stdin.pause();
     var runMongo = require('./run-mongo.js');
     runMongo.runMongoShell(mongoUrl);
@@ -1127,8 +1143,9 @@ main.registerCommand({
       "To instantly deploy your app on a free testing server,",
       "just enter your email address!");
     Console.error();
-    if (! auth.registerOrLogIn())
+    if (! auth.registerOrLogIn()) {
       return 1;
+    }
   }
 
   // Override architecture iff applicable.
@@ -1239,12 +1256,13 @@ main.registerCommand({
     return 1;
   }
 
-  if (options.add)
+  if (options.add) {
     return deploy.changeAuthorized(site, "add", options.add);
-  else if (options.remove)
+  } else if (options.remove) {
     return deploy.changeAuthorized(site, "remove", options.remove);
-  else
+  } else {
     return deploy.listAuthorized(site);
+  }
 });
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1376,8 +1394,9 @@ main.registerCommand({
   // Download packages for our architecture, and for the deploy server's
   // architecture if we're deploying.
   var serverArchitectures = [archinfo.host()];
-  if (options.deploy && DEPLOY_ARCH !== archinfo.host())
+  if (options.deploy && DEPLOY_ARCH !== archinfo.host()) {
     serverArchitectures.push(DEPLOY_ARCH);
+  }
 
   // XXX Because every run uses a new app with its own IsopackCache directory,
   //     this always does a clean build of all packages. Maybe we can speed up
@@ -1428,8 +1447,9 @@ main.registerCommand({
   var mobileOptions = ['ios', 'ios-device', 'android', 'android-device'];
   var mobileTargets = [];
   _.each(mobileOptions, function (option) {
-    if (options[option])
+    if (options[option]) {
       mobileTargets.push(option);
+    }
   });
 
   mobileTargets = dontBuildMobileOnWindows(mobileTargets, {
@@ -1844,8 +1864,9 @@ main.registerCommand({
     try {
       require('./http-helpers.js').getUrl("http://www.google.com/");
     } catch (e) {
-      if (e instanceof files.OfflineError)
+      if (e instanceof files.OfflineError) {
         offline = true;
+      }
     }
   }
 
@@ -1853,8 +1874,9 @@ main.registerCommand({
     try {
       return new RegExp(str);
     } catch (e) {
-      if (!(e instanceof SyntaxError))
+      if (!(e instanceof SyntaxError)) {
         throw e;
+      }
       Console.error("Bad regular expression: " + str);
       return null;
     }
@@ -2143,17 +2165,20 @@ main.registerCommand({
   catalogRefresh: new catalog.Refresh.Never()
 }, function (options) {
   var p = function (key) {
-    if (_.has(options, key))
+    if (_.has(options, key)) {
       return JSON.stringify(options[key]);
+    }
     return 'none';
   };
 
   Console.info(p('ething') + " " + p('port') + " " + p('changed') +
                        " " + p('args'));
-  if (options.url)
+  if (options.url) {
     Console.info('url');
-  if (options['delete'])
+  }
+  if (options['delete']) {
     Console.info('delete');
+  }
 });
 
 ///////////////////////////////////////////////////////////////////////////////

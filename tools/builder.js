@@ -51,8 +51,9 @@ _.extend(Builder.prototype, {
     var self = this;
 
     var parts = files.pathNormalize(relPath).split(files.pathSep);
-    if (parts.length > 1 && parts[parts.length - 1] === '')
-      parts.pop(); // remove trailing slash
+    if (parts.length > 1 && parts[parts.length - 1] === '') {
+      parts.pop();
+    } // remove trailing slash
 
     var partsSoFar = [];
     _.each(parts, function (part) {
@@ -84,8 +85,9 @@ _.extend(Builder.prototype, {
       var mustBeUnique = (i === parts.length - 1);
 
       // Basic sanitization
-      if (part.match(/^\.+$/))
+      if (part.match(/^\.+$/)) {
         throw new Error("Path contains forbidden segment '" + part + "'");
+      }
 
       part = part.replace(/[^a-zA-Z0-9._\:-]/g, '');
 
@@ -93,8 +95,9 @@ _.extend(Builder.prototype, {
       var ext = '';
       if (shouldBeFile) {
         var split = part.split('.');
-        if (split.length > 1)
+        if (split.length > 1) {
           ext = "." + split.pop();
+        }
         part = split.join('.');
       }
 
@@ -104,13 +107,15 @@ _.extend(Builder.prototype, {
         var candidate = files.pathJoin(partsOut.join(files.pathSep), part + suffix + ext);
         if (candidate.length) {
           // If we've never heard of this, then it's unique enough.
-          if (!_.has(self.usedAsFile, candidate))
+          if (!_.has(self.usedAsFile, candidate)) {
             break;
+          }
           // If we want this bit to be a directory, and we don't need it to be
           // unique (ie, it isn't the very last bit), and it's currently a
           // directory, then that's OK.
-          if (!(mustBeUnique || self.usedAsFile[candidate]))
+          if (!(mustBeUnique || self.usedAsFile[candidate])) {
             break;
+          }
           // OK, either we want it to be unique and it already exists; or it is
           // currently a file (and we want it to be either a different file or a
           // directory).  Try a new suffix.
@@ -149,20 +154,24 @@ _.extend(Builder.prototype, {
     options = options || {};
 
     // Ensure no trailing slash
-    if (relPath.slice(-1) === files.pathSep)
+    if (relPath.slice(-1) === files.pathSep) {
       relPath = relPath.slice(0, -1);
+    }
 
     // In sanitize mode, ensure path does not contain segments like
     // '..', does not contain forbidden characters, and is unique.
-    if (options.sanitize)
+    if (options.sanitize) {
       relPath = self._sanitize(relPath);
+    }
 
     var data;
     if (options.data) {
-      if (! (options.data instanceof Buffer))
+      if (! (options.data instanceof Buffer)) {
         throw new Error("data must be a Buffer");
-      if (options.file)
+      }
+      if (options.file) {
         throw new Error("May only pass one of data and file, not both");
+      }
       data = options.data;
     } else if (options.file) {
       data =
@@ -193,8 +202,9 @@ _.extend(Builder.prototype, {
     var self = this;
 
     // Ensure no trailing slash
-    if (relPath.slice(-1) === files.pathSep)
+    if (relPath.slice(-1) === files.pathSep) {
       relPath = relPath.slice(0, -1);
+    }
 
     self._ensureDirectory(files.pathDirname(relPath));
     files.writeFile(files.pathJoin(self.buildPath, relPath),
@@ -223,8 +233,9 @@ _.extend(Builder.prototype, {
     options = options || {};
 
     // Ensure no trailing slash
-    if (relPath.slice(-1) === files.pathSep)
+    if (relPath.slice(-1) === files.pathSep) {
       relPath = relPath.slice(0, -1);
+    }
 
     var parts = relPath.split(files.pathSep);
     var partsSoFar = [];
@@ -232,8 +243,9 @@ _.extend(Builder.prototype, {
       var part = parts[i];
       partsSoFar.push(part);
       var soFar = partsSoFar.join(files.pathSep);
-      if (self.usedAsFile[soFar])
+      if (self.usedAsFile[soFar]) {
         throw new Error("Path reservation conflict: " + relPath);
+      }
 
       var shouldBeDirectory = (i < parts.length - 1) || options.directory;
       if (shouldBeDirectory) {
@@ -312,8 +324,9 @@ _.extend(Builder.prototype, {
     options = options || {};
 
     var normOptionsTo = options.to;
-    if (normOptionsTo.slice(-1) === files.pathSep)
+    if (normOptionsTo.slice(-1) === files.pathSep) {
       normOptionsTo = normOptionsTo.slice(0, -1);
+    }
 
     var absPathTo = files.pathJoin(self.buildPath, normOptionsTo);
     if (options.symlink) {
@@ -388,7 +401,9 @@ _.extend(Builder.prototype, {
 
         if (_.any(ignore, function (pattern) {
           return itemForMatch.match(pattern);
-        })) return; // skip excluded files
+        })) {
+          return;
+        } // skip excluded files
 
         if (options.npmDiscards instanceof NpmDiscards &&
             options.npmDiscards.shouldDiscard(thisAbsFrom, isDirectory)) {
@@ -447,11 +462,13 @@ _.extend(Builder.prototype, {
         if (method === "generateFilename") {
           // fix up the returned path to be relative to the
           // sub-bundle, not the parent bundle
-          if (ret.substr(0, 1) === '/')
+          if (ret.substr(0, 1) === '/') {
             ret = ret.substr(1);
-          if (ret.substr(0, relPathWithSep.length) !== relPathWithSep)
+          }
+          if (ret.substr(0, relPathWithSep.length) !== relPathWithSep) {
             throw new Error("generateFilename returned path outside of " +
                             "sub-bundle?");
+          }
           ret = ret.substr(relPathWithSep.length);
         }
 

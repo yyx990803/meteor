@@ -79,16 +79,18 @@ compiler.compile = function (packageSource, options) {
       // and have the runner restart.
       pluginWatchSet.merge(buildResult.watchSet);
 
-      if (buildmessage.jobHasMessages())
+      if (buildmessage.jobHasMessages()) {
         return;
+      }
 
       _.each(buildResult.usedPackageNames, function (packageName) {
         pluginProviderPackageNames[packageName] = true;
       });
 
       // Register the built plugin's code.
-      if (!_.has(plugins, info.name))
+      if (!_.has(plugins, info.name)) {
         plugins[info.name] = {};
+      }
       plugins[info.name][buildResult.image.arch] = buildResult.image;
     });
   });
@@ -113,8 +115,9 @@ compiler.compile = function (packageSource, options) {
                                      packageSource.npmDependencies)) {
       nodeModulesPath = files.pathJoin(packageSource.npmCacheDirectory,
                                   'node_modules');
-      if (! meteorNpm.dependenciesArePortable(packageSource.npmCacheDirectory))
+      if (! meteorNpm.dependenciesArePortable(packageSource.npmCacheDirectory)) {
         isPortable = false;
+      }
     }
   }
 
@@ -133,8 +136,9 @@ compiler.compile = function (packageSource, options) {
   });
 
   _.each(packageSource.architectures, function (unibuild) {
-    if (unibuild.arch === 'web.cordova' && ! includeCordovaUnibuild)
+    if (unibuild.arch === 'web.cordova' && ! includeCordovaUnibuild) {
       return;
+    }
 
     var unibuildResult = compileUnibuild({
       isopack: isopk,
@@ -212,16 +216,18 @@ var compileUnibuild = function (options) {
     skipUnordered: true
     // implicitly skip weak deps by not specifying acceptableWeakPackages option
   }, function (unibuild) {
-    if (unibuild.pkg.name === isopk.name)
+    if (unibuild.pkg.name === isopk.name) {
       return;
+    }
     pluginProviderPackageNames[unibuild.pkg.name] = true;
     // If other package is built from source, then we need to rebuild this
     // package if any file in the other package that could define a plugin
     // changes.
     watchSet.merge(unibuild.pkg.pluginWatchSet);
 
-    if (_.isEmpty(unibuild.pkg.plugins))
+    if (_.isEmpty(unibuild.pkg.plugins)) {
       return;
+    }
     activePluginPackages.push(unibuild.pkg);
   });
 
@@ -314,8 +320,9 @@ var compileUnibuild = function (options) {
   // *** Process each source file
   var addAsset = function (contents, relPath, hash) {
     // XXX hack
-    if (! inputSourceArch.pkg.name)
+    if (! inputSourceArch.pkg.name) {
       relPath = relPath.replace(/^(private|public)\//, '');
+    }
 
     resources.push({
       type: "asset",
@@ -618,8 +625,9 @@ var compileUnibuild = function (options) {
        * @returns {Buffer}
        */
       read: function (n) {
-        if (n === undefined || readOffset + n > contents.length)
+        if (n === undefined || readOffset + n > contents.length) {
           n = contents.length - readOffset;
+        }
         var ret = contents.slice(readOffset, readOffset + n);
         readOffset += n;
         return ret;
@@ -636,13 +644,16 @@ var compileUnibuild = function (options) {
        * @instance
        */
       addHtml: function (options) {
-        if (! archinfo.matches(inputSourceArch.arch, "web"))
+        if (! archinfo.matches(inputSourceArch.arch, "web")) {
           throw new Error("Document sections can only be emitted to " +
                           "web targets");
-        if (options.section !== "head" && options.section !== "body")
+        }
+        if (options.section !== "head" && options.section !== "body") {
           throw new Error("'section' must be 'head' or 'body'");
-        if (typeof options.data !== "string")
+        }
+        if (typeof options.data !== "string") {
           throw new Error("'data' option to appendDocument must be a string");
+        }
         resources.push({
           type: options.section,
           data: new Buffer(files.convertToStandardLineEndings(options.data), 'utf8')
@@ -669,11 +680,13 @@ var compileUnibuild = function (options) {
        * @instance
        */
       addStylesheet: function (options) {
-        if (! archinfo.matches(inputSourceArch.arch, "web"))
+        if (! archinfo.matches(inputSourceArch.arch, "web")) {
           throw new Error("Stylesheets can only be emitted to " +
                           "web targets");
-        if (typeof options.data !== "string")
+        }
+        if (typeof options.data !== "string") {
           throw new Error("'data' option to addStylesheet must be a string");
+        }
         resources.push({
           type: "css",
           refreshable: true,
@@ -703,10 +716,12 @@ var compileUnibuild = function (options) {
        * @instance
        */
       addJavaScript: function (options) {
-        if (typeof options.data !== "string")
+        if (typeof options.data !== "string") {
           throw new Error("'data' option to addJavaScript must be a string");
-        if (typeof options.sourcePath !== "string")
+        }
+        if (typeof options.sourcePath !== "string") {
           throw new Error("'sourcePath' option must be supplied to addJavaScript. Consider passing inputPath.");
+        }
 
         // By default, use fileOptions for the `bare` option but also allow
         // overriding it with the options
@@ -814,8 +829,9 @@ var compileUnibuild = function (options) {
   var packageVariables = [];
   var packageVariableNames = {};
   _.each(inputSourceArch.declaredExports, function (symbol) {
-    if (_.has(packageVariableNames, symbol.name))
+    if (_.has(packageVariableNames, symbol.name)) {
       return;
+    }
     packageVariables.push({
       name: symbol.name,
       export: symbol.testOnly? "tests" : true
@@ -823,8 +839,9 @@ var compileUnibuild = function (options) {
     packageVariableNames[symbol.name] = true;
   });
   _.each(results.assignedVariables, function (name) {
-    if (_.has(packageVariableNames, name))
+    if (_.has(packageVariableNames, name)) {
       return;
+    }
     packageVariables.push({
       name: name
     });
@@ -875,10 +892,12 @@ compiler.eachUsedUnibuild = function (
   var processedUnibuildId = {};
   var usesToProcess = [];
   _.each(dependencies, function (use) {
-    if (options.skipUnordered && use.unordered)
+    if (options.skipUnordered && use.unordered) {
       return;
-    if (use.weak && !_.has(acceptableWeakPackages, use.package))
+    }
+    if (use.weak && !_.has(acceptableWeakPackages, use.package)) {
       return;
+    }
     usesToProcess.push(use);
   });
 
@@ -889,8 +908,9 @@ compiler.eachUsedUnibuild = function (
 
     // Ignore this package if we were told to skip debug-only packages and it is
     // debug-only.
-    if (usedPackage.debugOnly && options.skipDebugOnly)
+    if (usedPackage.debugOnly && options.skipDebugOnly) {
       continue;
+    }
 
     var unibuild = usedPackage.getUnibuildAtArch(arch);
     if (!unibuild) {
@@ -899,8 +919,9 @@ compiler.eachUsedUnibuild = function (
       continue;
     }
 
-    if (_.has(processedUnibuildId, unibuild.id))
+    if (_.has(processedUnibuildId, unibuild.id)) {
       continue;
+    }
     processedUnibuildId[unibuild.id] = true;
 
     callback(unibuild, {

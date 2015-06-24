@@ -16,8 +16,9 @@ var Console = require('./console.js').Console;
 var Profile = require('./profile.js').Profile;
 
 var rejectBadPath = function (p) {
-  if (p.match(/\.\./))
+  if (p.match(/\.\./)) {
     throw new Error("bad path: " + p);
+  }
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -123,12 +124,14 @@ _.extend(Unibuild.prototype, {
     "Unibuild#getResources", function (bundleArch, options) {
     var self = this;
     var isopackCache = options.isopackCache;
-    if (! isopackCache)
+    if (! isopackCache) {
       throw Error("no isopackCache?");
+    }
 
-    if (! archinfo.matches(bundleArch, self.arch))
+    if (! archinfo.matches(bundleArch, self.arch)) {
       throw new Error("unibuild of arch '" + self.arch + "' does not support '" +
                       bundleArch + "'?");
+    }
 
     // Compute imports by merging the exports of all of the packages
     // we use. Note that in the case of conflicting symbols, later
@@ -144,8 +147,9 @@ _.extend(Unibuild.prototype, {
       _.each(depUnibuild.packageVariables, function (symbol) {
         // Slightly hacky implementation of test-only exports.
         if (symbol.export === true ||
-            (symbol.export === "tests" && self.pkg.isTest))
+            (symbol.export === "tests" && self.pkg.isTest)) {
           imports[symbol.name] = depUnibuild.pkg.name;
+        }
       });
     };
     compiler.eachUsedUnibuild({
@@ -284,10 +288,12 @@ Isopack.convertIsopackFormat = Profile(
   var toPos = _.indexOf(Isopack.knownFormats, toFormat);
   var step = fromPos < toPos ? 1 : -1;
 
-  if (fromPos === -1)
+  if (fromPos === -1) {
     throw new Error("Can't convert from unknown Isopack format: " + fromFormat);
-  if (toPos === -1)
+  }
+  if (toPos === -1) {
     throw new Error("Can't convert to unknown Isopack format: " + toFormat);
+  }
 
   while (fromPos !== toPos) {
     if (step > 0) {
@@ -400,8 +406,9 @@ _.extend(Isopack.prototype, {
         anySourceFiles = true;
         var relativePath = files.pathRelative(sourceRoot, filename);
         // We only want files that are actually under sourceRoot.
-        if (relativePath.substr(0, 3) === '..' + files.pathSep)
+        if (relativePath.substr(0, 3) === '..' + files.pathSep) {
           return;
+        }
         sourceFiles[relativePath] = true;
       });
     };
@@ -413,8 +420,9 @@ _.extend(Isopack.prototype, {
     // Were we actually built from source or loaded from an IsopackCache? If so
     // then there should be at least one source file in some WatchSet. If not,
     // return null.
-    if (! anySourceFiles)
+    if (! anySourceFiles) {
       return null;
+    }
     return _.keys(sourceFiles);
   }),
 
@@ -509,8 +517,9 @@ _.extend(Isopack.prototype, {
     "Isopack#_ensurePluginsInitialized", function () {
     var self = this;
 
-    if (self._pluginsInitialized)
+    if (self._pluginsInitialized) {
       return;
+    }
 
     /**
      * @global
@@ -634,8 +643,9 @@ _.extend(Isopack.prototype, {
     // PackageMap which can be subset to create a new PackageMap object.)
     var unibuildWatchSets = {};
     if (options.isopackBuildInfoJson) {
-      if (! options.firstIsopack)
+      if (! options.firstIsopack) {
         throw Error("can't merge isopacks with buildinfo");
+      }
 
       // XXX should comprehensively sanitize (eg, typecheck) everything
       // read from json files
@@ -689,8 +699,9 @@ _.extend(Isopack.prototype, {
       var alreadyHaveUnibuild = _.find(self.unibuilds, function (unibuild) {
         return unibuild.arch === unibuildMeta.arch;
       });
-      if (alreadyHaveUnibuild)
+      if (alreadyHaveUnibuild) {
         return;
+      }
 
       var unibuildJson = JSON.parse(
         files.readFile(files.pathJoin(dir, unibuildMeta.path)));
@@ -698,9 +709,10 @@ _.extend(Isopack.prototype, {
       var unibuildBasePath =
         files.pathDirname(files.pathJoin(dir, unibuildMeta.path));
 
-      if (unibuildJson.format !== "unipackage-unibuild-pre1")
+      if (unibuildJson.format !== "unipackage-unibuild-pre1") {
         throw new Error("Unsupported isopack unibuild format: " +
                         JSON.stringify(unibuildJson.format));
+      }
 
       var nodeModulesPath = null;
       if (unibuildJson.node_modules) {
@@ -728,8 +740,9 @@ _.extend(Isopack.prototype, {
           } finally {
             files.close(fd);
           }
-          if (count !== resource.length)
+          if (count !== resource.length) {
             throw new Error("couldn't read entire resource");
+          }
         }
 
         if (resource.type === "prelink") {
@@ -751,9 +764,10 @@ _.extend(Isopack.prototype, {
             servePath: resource.servePath || undefined,
             path: resource.path || undefined
           });
-        } else
+        } else {
           throw new Error("bad resource type in isopack: " +
                           JSON.stringify(resource.type));
+        }
       });
 
       self.unibuilds.push(new Unibuild(self, {
@@ -930,8 +944,9 @@ _.extend(Isopack.prototype, {
               concat[resource.type].push(new Buffer("\n", "utf8"));
               offset[resource.type]++;
             }
-            if (! (resource.data instanceof Buffer))
+            if (! (resource.data instanceof Buffer)) {
               throw new Error("Resource data must be a Buffer");
+            }
             unibuildJson.resources.push({
               type: resource.type,
               file: files.pathJoin(unibuildDir, resource.type),
@@ -952,8 +967,9 @@ _.extend(Isopack.prototype, {
 
         // Output other resources each to their own file
         _.each(unibuild.resources, function (resource) {
-          if (_.contains(["head", "body"], resource.type))
-            return; // already did this one
+          if (_.contains(["head", "body"], resource.type)) {
+            return;
+          } // already did this one
 
           unibuildJson.resources.push({
             type: resource.type,
@@ -1198,8 +1214,9 @@ _.extend(Isopack.prototype, {
           title: "compiling " + isopacketName + " packages for the tool"
         }, function () {
           isopacketBuildContext.isopackCache.buildLocalPackages(packages);
-          if (buildmessage.jobHasMessages())
+          if (buildmessage.jobHasMessages()) {
             return;
+          }
 
           var image = bundler.buildJsImage({
             name: "isopacket-" + isopacketName,
@@ -1207,8 +1224,9 @@ _.extend(Isopack.prototype, {
             isopackCache: isopacketBuildContext.isopackCache,
             use: packages
           }).image;
-          if (buildmessage.jobHasMessages())
+          if (buildmessage.jobHasMessages()) {
             return;
+          }
 
           image.write(
             builder.enter(files.pathJoin('isopackets', isopacketName)));
@@ -1246,8 +1264,9 @@ _.extend(Isopack.prototype, {
     var self = this;
     var packages = {};
     var processUse = function (use) {
-      if (use.weak || use.unordered)
+      if (use.weak || use.unordered) {
         return;
+      }
       packages[use.package] = true;
     };
 

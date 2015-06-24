@@ -92,10 +92,11 @@ _.extend(RunLog.prototype, {
     self._record(obj);
 
     self._clearSpecial();
-    if (self.rawLogs)
+    if (self.rawLogs) {
       Console[isStderr ? "rawError" : "rawInfo"](line + "\n");
-    else
+    } else {
       Console.rawInfo(Log.format(obj, { color: true }) + "\n");
+    }
 
     // XXX deal with test server logging differently?!
   },
@@ -155,8 +156,9 @@ _.extend(RunLog.prototype, {
     }
 
     var message = "=> Meteor server restarted";
-    if (self.consecutiveRestartMessages > 1)
+    if (self.consecutiveRestartMessages > 1) {
       message += " (x" + self.consecutiveRestartMessages + ")";
+    }
     // no newline, so that we can overwrite it if we get another
     // restart message right after this one
     process.stdout.write(message);
@@ -182,8 +184,9 @@ _.extend(RunLog.prototype, {
     }
 
     var message = "=> Client modified -- refreshing";
-    if (self.consecutiveClientRestartMessages > 1)
+    if (self.consecutiveClientRestartMessages > 1) {
       message += " (x" + self.consecutiveClientRestartMessages + ")";
+    }
     // no newline, so that we can overwrite it if we get another
     // restart message right after this one
     process.stdout.write(message);

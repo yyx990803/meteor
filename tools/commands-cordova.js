@@ -31,8 +31,9 @@ var AVAILABLE_PLATFORMS =
 // The version in warehouse fails when run from a checkout.
 // XXX: Rationalize
 var cordovaWarehouseDir = function () {
-  if (process.env.METEOR_WAREHOUSE_DIR)
+  if (process.env.METEOR_WAREHOUSE_DIR) {
     return process.env.METEOR_WAREHOUSE_DIR;
+  }
 
   var warehouseBase = files.inCheckout()
     ? files.getCurrentToolsDir() : files.getHomeDir();
@@ -193,8 +194,9 @@ var setVerboseness = cordova.setVerboseness = function (v) {
   verboseness = !!v;
 };
 var verboseLog = cordova.verboseLog = function (...args) {
-  if (verboseness)
+  if (verboseness) {
     Console.rawError('%% ' + util.format.apply(null, args) + "\n");
+  }
 };
 
 
@@ -217,13 +219,17 @@ var execFileAsyncOrThrow = function (file, args, opts, cb) {
   var p = execFileAsync(file, args, opts);
   p.on('close', function (code) {
     var err = null;
-    if (code)
+    if (code) {
       err = new Error(file + ' ' + args.join(' ') +
                       ' exited with non-zero code: ' + code + '. Use -v for' +
                       ' more logs.');
+    }
 
-    if (cb) cb(err, code);
-    else if (err) throw err;
+    if (cb) {
+      cb(err, code);
+    } else if (err) {
+      throw err;
+    }
   });
 };
 
@@ -300,7 +306,9 @@ var generateCordovaBoilerplate = function (projectContext, clientDir, options) {
   var WebAppHashing = getLoadedPackages()['webapp-hashing'].WebAppHashing;
 
   var configDummy = {};
-  if (publicSettings) configDummy.PUBLIC_SETTINGS = publicSettings;
+  if (publicSettings) {
+    configDummy.PUBLIC_SETTINGS = publicSettings;
+  }
 
   var calculatedHash =
     WebAppHashing.calculateClientHash(manifest, null, configDummy);
@@ -325,8 +333,9 @@ var generateCordovaBoilerplate = function (projectContext, clientDir, options) {
     appId: projectContext.appIdentifier
   };
 
-  if (publicSettings)
+  if (publicSettings) {
     runtimeConfig.PUBLIC_SETTINGS = publicSettings;
+  }
 
   var boilerplate = new Boilerplate(WEB_ARCH_NAME, manifest, {
     urlMapper: _.identity,
@@ -410,9 +419,10 @@ var getCordovaInstalledPlatforms = function(projectContext) {
   var platformsOutput = platformsList.stdout.split('\n')[0];
   var platformsStrings = platformsOutput.match(/Installed platforms: (.*)/)[1];
 
-  if (platformsStrings === undefined)
+  if (platformsStrings === undefined) {
     throw new Error('Failed to parse the output of `cordova platform list`: ' +
                      platformsList.stdout);
+  }
 
   return installedPlatforms = _.map(platformsStrings.split(', '), function (s) {
     return s.split(' ')[0];
@@ -428,8 +438,9 @@ var ensureCordovaPlatforms = function (projectContext) {
   var installedPlatforms = getCordovaInstalledPlatforms(projectContext);
 
   _.each(platforms, function (platform) {
-    if (_.contains(installedPlatforms, platform))
+    if (_.contains(installedPlatforms, platform)) {
       return;
+    }
     verboseLog('The platform is not in the Cordova project: ' + platform);
     if (checkPlatformRequirements(platform).acceptable) {
       verboseLog('Adding a platform', platform);
@@ -499,8 +510,9 @@ var installPlugin = function (cordovaPath, name, version, conf, projectDir) {
   var execRes = execFileSyncOrThrow(localCordova,
      ['plugin', 'add', pluginInstallCommand].concat(additionalArgs),
      { cwd: cordovaPath, env: buildCordovaEnv() });
-  if (! execRes.success)
+  if (! execRes.success) {
     throw new Error("Failed to install plugin " + name + ": " + execRes.stderr);
+  }
   // Starting with cordova-lib 4.0.0, `plugin add` fails to exit non-zero on
   // this particular error, and it prints the error on stdout.  See
   // https://github.com/meteor/meteor/issues/3914
@@ -540,8 +552,9 @@ var uninstallPlugin = function (cordovaPath, name, isFromTarballUrl) {
 // cordova-build directory instead of meteor project directory.
 var getCordovaLocalPluginPath = function (pluginPath, cordovaPath, projectDir) {
     pluginPath = pluginPath.substr("file://".length);
-    if (utils.isPathRelative(pluginPath))
-        return path.relative(cordovaPath, path.resolve(projectDir, pluginPath));
+    if (utils.isPathRelative(pluginPath)) {
+      return path.relative(cordovaPath, path.resolve(projectDir, pluginPath));
+    }
     return pluginPath;
 }
 
@@ -559,8 +572,9 @@ var getTarballPluginsLock = function (cordovaPath) {
 
     verboseLog('The tarball plugins lock:', tarballPluginsLock);
   } catch (err) {
-    if (err.code !== 'ENOENT')
+    if (err.code !== 'ENOENT') {
       throw err;
+    }
 
     verboseLog('The tarball plugins file was not found.');
     tarballPluginsLock = {};
@@ -596,8 +610,9 @@ var getInstalledPlugins = function (cordovaPath) {
   if (! pluginsOutput.match(/No plugins added/)) {
     _.each(pluginsOutput.split('\n'), function (line) {
       line = line.trim();
-      if (line === '')
+      if (line === '') {
         return;
+      }
       var plugin = line.split(' ')[0];
       var version = line.split(' ')[1];
       installedPlugins[plugin] = version;
@@ -652,8 +667,9 @@ var ensureCordovaPlugins = function (projectContext, options) {
   _.each(plugins, function (version, name) {
     // Check if plugin is installed from local path
     pluginFromLocalPath = utils.isUrlWithFileScheme(version);
-    if (pluginFromLocalPath)
+    if (pluginFromLocalPath) {
       pluginsFromLocalPath[name] = version;
+    }
 
     // XXX there is a hack here that never updates a package if you are
     // trying to install it from a URL, because we can't determine if
@@ -673,8 +689,9 @@ var ensureCordovaPlugins = function (projectContext, options) {
     }
   });
 
-  if (! _.isEmpty(pluginsFromLocalPath))
+  if (! _.isEmpty(pluginsFromLocalPath)) {
     verboseLog('Reinstalling cordova plugins added from the local path');
+  }
 
   if (shouldReinstallPlugins || ! _.isEmpty(pluginsFromLocalPath)) {
     // Loop through all of the current plugins and remove them one by one until
@@ -700,18 +717,20 @@ var ensureCordovaPlugins = function (projectContext, options) {
       // This will completely destroy the project state. We should work with
       // Cordova to fix the bug in their system, because it doesn't seem
       // like there's a way around this.
-      if (clearPluginsDirectory)
+      if (clearPluginsDirectory) {
         files.rm_recursive(files.pathJoin(cordovaPath, 'platforms'));
+      }
 
       ensureCordovaPlatforms(projectContext);
     };
 
     buildmessage.enterJob({ title: "installing Cordova plugins"}, function () {
       installedPlugins = getInstalledPlugins(cordovaPath);
-      if (shouldReinstallPlugins)
+      if (shouldReinstallPlugins) {
         uninstallPlugins(installedPlugins, true);
-      else
+      } else {
         uninstallPlugins(pluginsFromLocalPath, false);
+      }
 
       // Now install necessary plugins.
       try {
@@ -770,9 +789,10 @@ var fetchCordovaPluginFromShaUrl =
       execFileSyncOrThrow('wget', ['-O', pluginTarballPath, urlWithSha]);
   }
 
-  if (! downloadProcess.success)
+  if (! downloadProcess.success) {
     throw new Error("Failed to fetch the tarball from " + urlWithSha + ": " +
                     downloadProcess.stderr);
+  }
 
   verboseLog('Create a folder for the plugin', pluginPath);
   files.mkdir_p(pluginPath);
@@ -782,9 +802,10 @@ var fetchCordovaPluginFromShaUrl =
   verboseLog('Untarring the tarball with plugin');
   var tarProcess = execFileSyncOrThrow('tar',
     ['xf', pluginTarballPath, '-C', pluginPath, '--strip-components=1']);
-  if (! tarProcess.success)
+  if (! tarProcess.success) {
     throw new Error("Failed to untar the tarball from " + urlWithSha + ": " +
                     tarProcess.stderr);
+  }
   verboseLog('Untarring succeeded, removing the tarball');
   files.rm_recursive(pluginTarballPath);
 
@@ -799,10 +820,11 @@ var fetchCordovaPluginFromShaUrl =
       pluginName + ': Failed to parse the plugin from tarball');
   }
 
-  if (actualPluginName !== pluginName)
+  if (actualPluginName !== pluginName) {
     throw new Error(pluginName +
                     ': The plugin from tarball has a different name - ' +
                     actualPluginName);
+  }
 
   return pluginPath;
 };
@@ -824,8 +846,9 @@ var pluginsConfiguration = {};
 // Build a Cordova project, creating a Cordova project if necessary.
 var buildCordova = function (projectContext, platforms, options) {
   verboseLog('Building the cordova build project');
-  if (_.isEmpty(platforms))
+  if (_.isEmpty(platforms)) {
     return;
+  }
 
   buildmessage.enterJob({ title: 'building for mobile devices' }, function () {
     var bundlePath =
@@ -926,8 +949,9 @@ var buildCordova = function (projectContext, platforms, options) {
         // XXX a hack to reset the debuggable mode
         var manifest = files.readFile(manifestPath, 'utf8');
         manifest = manifest.replace(/android:debuggable=.(true|false)./g, '');
-        if (options.debug)
+        if (options.debug) {
           manifest = manifest.replace(/<application /g, '<application android:debuggable="' + !!options.debug + '" ');
+        }
         files.writeFile(manifestPath, manifest, 'utf8');
 
         // XXX workaround the problem of cached apk invalidation
@@ -953,8 +977,9 @@ var buildCordova = function (projectContext, platforms, options) {
         // XXX a better message
         var message = "Can't build an iOS project from the /tmp directory.";
 
-        if (verboseness)
+        if (verboseness) {
           message = err.message + '\n' + message;
+        }
 
         throw new Error(message);
       } else {
@@ -1216,12 +1241,14 @@ var execCordovaOnPlatform = function (projectContext, platformName, options) {
     var parsedLine =
       line.match(/^([^?]*)(\?[a-zA-Z0-9]+)?: Line (\d+) : (.*)$/);
 
-    if (! parsedLine)
+    if (! parsedLine) {
       return Log.format(
         Log.objFromText(line), { metaColor: 'green', color: true });
+    }
 
-    if (isDebugOutput(parsedLine[4]) && ! verboseness)
+    if (isDebugOutput(parsedLine[4]) && ! verboseness) {
       return null;
+    }
 
     var output = {
       time: new Date,
@@ -1249,11 +1276,13 @@ var execCordovaOnPlatform = function (projectContext, platformName, options) {
     var finishedRegexp =
       /Finished load of: http:\/\/[0-9]+.[0-9]+.[0-9]+.[0-9]+:[0-9]+/g;
 
-    if (finishedRegexp.test(line))
+    if (finishedRegexp.test(line)) {
       appLogsStarted = true;
+    }
 
-    if (! appLogsStarted)
+    if (! appLogsStarted) {
       return null;
+    }
 
     // Skip the success messages from File Transfer. There are a lot of them on
     // Hot-Code Push, but we are interested only in failures.
@@ -1262,8 +1291,9 @@ var execCordovaOnPlatform = function (projectContext, platformName, options) {
           return null;
         }
 
-    if (isDebugOutput(line) && ! verboseness)
+    if (isDebugOutput(line) && ! verboseness) {
       return null;
+    }
 
     return Log.format(Log.objFromText(line, { program: 'ios' }), {
       metaColor: 'cyan',
@@ -1307,8 +1337,11 @@ var execCordovaOnPlatform = function (projectContext, platformName, options) {
                          { env: buildCordovaEnv() },
                          function (err, code) {
                            if (!future.isResolved()) {
-                             if (err) future['throw'](err);
-                             else future['return'](code);
+                             if (err) {
+                               future['throw'](err);
+                             } else {
+                               future['return'](code);
+                             }
                            }
                          });
     setTimeout(function () {
@@ -1591,8 +1624,9 @@ var consumeControlFile = function (
     info: function (options) {
       // check that every key is meaningful
       _.each(options, function (value, key) {
-        if (! _.has(metadata, key))
+        if (! _.has(metadata, key)) {
           throw new Error("Unknown key in App.info configuration: " + key);
+        }
       });
 
       _.extend(metadata, options);
@@ -1643,8 +1677,9 @@ var consumeControlFile = function (
       var validDevices =
         _.keys(iconIosSizes).concat(_.keys(iconAndroidSizes));
       _.each(icons, function (value, key) {
-        if (! _.include(validDevices, key))
+        if (! _.include(validDevices, key)) {
           throw new Error(key + ": unknown key in App.icons configuration.");
+        }
       });
       _.extend(imagePaths.icon, icons);
     },
@@ -1686,8 +1721,9 @@ var consumeControlFile = function (
         _.keys(launchIosSizes).concat(_.keys(launchAndroidSizes));
 
       _.each(launchScreens, function (value, key) {
-        if (! _.include(validDevices, key))
+        if (! _.include(validDevices, key)) {
           throw new Error(key + ": unknown key in App.launchScreens configuration.");
+        }
       });
       _.extend(imagePaths.splash, launchScreens);
     },
@@ -1780,8 +1816,9 @@ var consumeControlFile = function (
   // Copy all the access rules
   _.each(accessRules, function (rule, pattern) {
     var opts = { origin: pattern };
-    if (rule === 'external')
+    if (rule === 'external') {
       opts['launch-external'] = true;
+    }
 
     config.ele('access', opts);
   });
@@ -1805,8 +1842,9 @@ var consumeControlFile = function (
     };
 
     // XXX special case for Android
-    if (androidMatch)
+    if (androidMatch) {
       xmlRec.density = androidMatch[2].substr(0, 4) + '-' + androidMatch[1];
+    }
 
     return xmlRec;
   };
@@ -1816,8 +1854,9 @@ var consumeControlFile = function (
       var height = size.split('x')[1];
 
       var suppliedPath = imagePaths[tag][name];
-      if (! suppliedPath)
+      if (! suppliedPath) {
         return;
+      }
 
       var suppliedFilename = _.last(suppliedPath.split(files.pathSep));
       var extension = _.last(suppliedFilename.split('.'));
@@ -2211,10 +2250,11 @@ _.extend(Android.prototype, {
 
   getAndroidBundlePath: function () {
     // XXX XXX is this right?
-    if (files.usesWarehouse())
+    if (files.usesWarehouse()) {
       return files.pathJoin(tropo.root, 'android_bundle');
-    else
+    } else {
       return files.pathJoin(files.getCurrentToolsDir(), 'android_bundle');
+    }
   },
 
   runAndroidTool: function (args, options) {
@@ -2480,14 +2520,16 @@ _.extend(Android.prototype, {
       var idRe = /^id: ([0-9]+)/;
       var tagRe = new RegExp("^\\s*Tag/ABIs\\s*:.*" + abi + ".*");
       _.each(stdout.split('\n'), function (line) {
-        if (haveSeenTarget)
+        if (haveSeenTarget) {
           return;
+        }
         var match = line.match(idRe);
         if (match) {
           lastId = match[1];
         }
-        if (line.match(tagRe))
+        if (line.match(tagRe)) {
           haveSeenTarget = true;
+        }
       });
 
       if (!haveSeenTarget || lastId === null) {
@@ -3255,7 +3297,9 @@ main.registerCommand({
 
 // XXX: Move to Strings
 var capitalize = function (s) {
-  if (!s.length) return s;
+  if (!s.length) {
+    return s;
+  }
   return s.substring(0, 1).toUpperCase() + s.substring(1);
 };
 
@@ -3315,10 +3359,11 @@ main.registerCommand({
       Console.info("We don't have installation instructions for your platform");
     }
 
-    if (installed.acceptable)
+    if (installed.acceptable) {
       return 0;
-    else
+    } else {
       return 1;
+    }
   }
 
   //var args = options.args || [];

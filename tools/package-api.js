@@ -8,8 +8,9 @@ var files = require('./files.js');
 var catalog = require('./catalog.js');
 
 function toArray (x) {
-  if (_.isArray(x))
+  if (_.isArray(x)) {
     return x;
+  }
   return x ? [x] : [];
 }
 
@@ -199,8 +200,9 @@ _.extend(PackageAPI.prototype, {
       try {
         var parsed = utils.parsePackageConstraint(name);
       } catch (e) {
-        if (!e.versionParserError)
+        if (!e.versionParserError) {
           throw e;
+        }
         buildmessage.error(e.message, {useMyCaller: true});
         // recover by ignoring
         continue;
@@ -256,8 +258,9 @@ _.extend(PackageAPI.prototype, {
       try {
         var parsed = utils.parsePackageConstraint(name);
       } catch (e) {
-        if (!e.versionParserError)
+        if (!e.versionParserError) {
           throw e;
+        }
         buildmessage.error(e.message, {useMyCaller: true});
         // recover by ignoring
         continue;
@@ -319,8 +322,9 @@ _.extend(PackageAPI.prototype, {
           return;
         }
         var source = {relPath: path};
-        if (fileOptions)
+        if (fileOptions) {
           source.fileOptions = fileOptions;
+        }
         self.sources[a][path] = source;
       });
     });

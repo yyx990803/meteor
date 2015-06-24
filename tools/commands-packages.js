@@ -41,8 +41,9 @@ var getReleaseOrPackageRecord = function(name) {
   if (!rec) {
     // Not a package! But is it a release track?
     rec = catalog.official.getReleaseTrack(name);
-    if (rec)
+    if (rec) {
       rel = true;
+    }
   }
   return { record: rec, isRelease: rel };
 };
@@ -353,8 +354,9 @@ main.registerCommand({
   }
   var packageName = localVersionRecord.packageName;
   var packageSource = projectContext.localCatalog.getPackageSource(packageName);
-  if (! packageSource)
+  if (! packageSource) {
     throw Error("no PackageSource for " + packageName);
+  }
 
   // Anything published to the server must explicitly set a version.
   if (! packageSource.versionExplicitlyProvided) {
@@ -402,11 +404,14 @@ main.registerCommand({
 
   // Make sure that both the package and its test (if any) are actually built.
   _.each([packageName, packageSource.testName], function (name) {
-    if (! name)  // for testName
+    if (// for testName
+    ! name) {
       return;
+    }
     // If we're already using this package, that's OK; no need to override.
-    if (projectContext.projectConstraintsFile.getConstraint(name))
+    if (projectContext.projectConstraintsFile.getConstraint(name)) {
       return;
+    }
     projectContext.projectConstraintsFile.addConstraints(
       [utils.parsePackageConstraint(name)]);
   });
@@ -655,8 +660,9 @@ main.registerCommand({
   });
 
   var isopk = projectContext.isopackCache.getIsopack(name);
-  if (! isopk)
+  if (! isopk) {
     throw Error("didn't build isopack for " + name);
+  }
 
   var conn;
   try {
@@ -873,8 +879,9 @@ main.registerCommand({
         buildmessage.enterJob("checking consistency of " + packageName, function () {
           var packageSource = projectContext.localCatalog.getPackageSource(
             packageName);
-          if (! packageSource)
+          if (! packageSource) {
             throw Error("no PackageSource for built package " + packageName);
+          }
 
           if (! packageSource.versionExplicitlyProvided) {
             buildmessage.error(
@@ -914,8 +921,9 @@ main.registerCommand({
             return;
           } else {
             var isopk = projectContext.isopackCache.getIsopack(packageName);
-            if (! isopk)
+            if (! isopk) {
               throw Error("no isopack for " + packageName);
+            }
 
             var existingBuild =
                   catalog.official.getBuildWithPreciseBuildArchitectures(
@@ -955,12 +963,14 @@ main.registerCommand({
         "publishing package " + packageName,
         function () {
           var isopk = projectContext.isopackCache.getIsopack(packageName);
-          if (! isopk)
+          if (! isopk) {
             throw Error("no isopack for " + packageName);
+          }
           var packageSource = projectContext.localCatalog.getPackageSource(
             packageName);
-          if (! packageSource)
+          if (! packageSource) {
             throw Error("no PackageSource for built package " + packageName);
+          }
 
           var binary = isopk.platformSpecific();
           packageClient.publishPackage({
@@ -970,8 +980,9 @@ main.registerCommand({
             new: ! catalog.official.getPackage(packageName),
             doNotPublishBuild: binary
           });
-          if (buildmessage.jobHasMessages())
+          if (buildmessage.jobHasMessages()) {
             return;
+          }
 
           Console.info(
             'Published ' + packageName + '@' + packageSource.version + '.');
@@ -1001,8 +1012,9 @@ main.registerCommand({
           packageClient.callPackageServerBM(
             conn, 'createReleaseTrack', { name: relConf.track } );
         });
-        if (buildmessage.jobHasMessages())
+        if (buildmessage.jobHasMessages()) {
           return;
+        }
       }
 
       buildmessage.enterJob("creating a new release version", function () {
@@ -1120,8 +1132,9 @@ main.registerCommand({
   projectContext.projectConstraintsFile.eachConstraint(function (constraint) {
     var packageName = constraint.package;
     var mapInfo = projectContext.packageMap.getInfo(packageName);
-    if (! mapInfo)
+    if (! mapInfo) {
       throw Error("no version for used package " + packageName);
+    }
     var versionRecord = projectContext.projectCatalog.getVersion(
       packageName, mapInfo.version);
     if (! versionRecord) {
@@ -1264,8 +1277,9 @@ var maybeUpdateRelease = function (options) {
   // At this point we should have a release. (If we didn't to start
   // with, #UpdateSpringboard fixed that.) And it can't be a checkout,
   // because we checked for that at the very beginning.
-  if (! release.current || ! release.current.isProperRelease())
+  if (! release.current || ! release.current.isProperRelease()) {
     throw new Error("don't have a proper release?");
+  }
 
   // If we're not in an app, then we're basically done. The only thing left to
   // do is print out some messages explaining what happened (and advising the
@@ -1410,8 +1424,9 @@ var maybeUpdateRelease = function (options) {
   var solutionReleaseVersion = _.find(releaseVersionsToTry, function (versionToTry) {
     var releaseRecord = catalog.official.getReleaseVersion(
       releaseTrack, versionToTry);
-    if (!releaseRecord)
+    if (!releaseRecord) {
       throw Error("missing release record?");
+    }
 
     // Reset the project context and pretend we're using the potential release.
     projectContext.reset({ releaseForConstraints: releaseRecord });
@@ -1586,8 +1601,9 @@ main.registerCommand({
   main.captureAndExit(
     "=> Errors while upgrading packages:", "upgrading packages", function () {
       projectContext.resolveConstraints();
-      if (buildmessage.jobHasMessages())
+      if (buildmessage.jobHasMessages()) {
         return;
+      }
 
       // If the user explicitly mentioned some packages to upgrade, they must
       // actually end up in our solution!
@@ -1596,8 +1612,9 @@ main.registerCommand({
           buildmessage.error(packageName + ': package is not in the project');
         }
       });
-      if (buildmessage.jobHasMessages())
+      if (buildmessage.jobHasMessages()) {
         return;
+      }
 
       // Finish preparing the project.
       projectContext.prepareProjectForBuild();
@@ -1819,8 +1836,9 @@ main.registerCommand({
 
   var args = filteredPackages.rest;
 
-  if (_.isEmpty(args))
+  if (_.isEmpty(args)) {
     return exitCode;
+  }
 
   // Messages that we should print if we make any changes, but that don't count
   // as errors.
@@ -1836,8 +1854,9 @@ main.registerCommand({
         var constraint = utils.parsePackageConstraint(packageReq, {
           useBuildmessage: true
         });
-        if (buildmessage.jobHasMessages())
+        if (buildmessage.jobHasMessages()) {
           return;
+        }
 
         // It's OK to make errors based on looking at the catalog, because this
         // is a OnceAtStart command.
@@ -1849,8 +1868,9 @@ main.registerCommand({
         }
 
         _.each(constraint.versionConstraint.alternatives, function (subConstr) {
-          if (subConstr.versionString === null)
+          if (subConstr.versionString === null) {
             return;
+          }
           // Figure out if this version exists either in the official catalog or
           // the local catalog. (This isn't the same as using the combined
           // catalog, since it's OK to type "meteor add foo@1.0.0" if the local
@@ -1868,8 +1888,9 @@ main.registerCommand({
                                subConstr.versionString);
           }
         });
-        if (buildmessage.jobHasMessages())
+        if (buildmessage.jobHasMessages()) {
           return;
+        }
 
         var current = projectContext.projectConstraintsFile.getConstraint(
           constraint.package);
@@ -2003,8 +2024,9 @@ main.registerCommand({
 
   var args = filteredPackages.rest;
 
-  if (_.isEmpty(args))
+  if (_.isEmpty(args)) {
     return exitCode;
+  }
 
   // For each package name specified, check if we already have it and warn the
   // user. Because removing each package is a completely atomic operation that
@@ -2024,8 +2046,9 @@ main.registerCommand({
       packagesToRemove.push(packageName);
     }
   });
-  if (! packagesToRemove.length)
+  if (! packagesToRemove.length) {
     return exitCode;
+  }
 
   // Remove the packages from the in-memory representation of .meteor/packages.
   projectContext.projectConstraintsFile.removePackages(packagesToRemove);
@@ -2152,10 +2175,11 @@ main.registerCommand({
   Console.info();
   Console.info("The maintainers for " + name + " are:");
   _.each(record.maintainers, function (user) {
-    if (! user || !user.username)
+    if (! user || !user.username) {
       Console.rawInfo("<unknown>" + "\n");
-    else
+    } else {
       Console.rawInfo(user.username + "\n");
+    }
   });
   return 0;
 });
@@ -2202,8 +2226,9 @@ main.registerCommand({
 
   var toolPackageVersion = releaseRecord.tool &&
         utils.parsePackageAndVersion(releaseRecord.tool);
-  if (!toolPackageVersion)
+  if (!toolPackageVersion) {
     throw new Error("bad tool in release: " + releaseRecord.tool);
+  }
   var toolPackage = toolPackageVersion.package;
   var toolVersion = toolPackageVersion.version;
 
@@ -2338,8 +2363,9 @@ main.registerCommand({
     var toolIsopack = new isopack.Isopack;
     toolIsopack.initFromPath(toolPackage, toolIsopackPath);
     var toolRecord = _.findWhere(toolIsopack.toolsOnDisk, {arch: osArch});
-    if (!toolRecord)
+    if (!toolRecord) {
       throw Error("missing tool for " + osArch);
+    }
 
     tmpTropo.linkToLatestMeteor(files.pathJoin(
         tmpTropo.packagePath(toolPackage, toolVersion, true),

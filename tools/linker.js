@@ -4,10 +4,11 @@ var buildmessage = require('./buildmessage');
 var watch = require('./watch.js');
 
 var packageDot = function (name) {
-  if (/^[a-zA-Z][a-zA-Z0-9]*$/.exec(name))
+  if (/^[a-zA-Z][a-zA-Z0-9]*$/.exec(name)) {
     return "Package." + name;
-  else
+  } else {
     return "Package['" + name + "']";
+  }
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -51,8 +52,9 @@ _.extend(Module.prototype, {
     _.each(self.files, function (file) {
       var m = 0;
       _.each(file.source.split('\n'), function (line) {
-        if (line.length <= ignoreOver && line.length > m)
+        if (line.length <= ignoreOver && line.length > m) {
           m = line.length;
+        }
       });
       maxInFile.push(m);
     });
@@ -108,10 +110,11 @@ _.extend(Module.prototype, {
 
         var sourceMap = results.map.toJSON();
         // No use generating empty source maps.
-        if (_.isEmpty(sourceMap.sources))
+        if (_.isEmpty(sourceMap.sources)) {
           sourceMap = null;
-        else
+        } else {
           sourceMap = JSON.stringify(sourceMap);
+        }
 
         return {
           source: results.code,
@@ -131,8 +134,9 @@ _.extend(Module.prototype, {
 
     // Emit each file
     _.each(self.files, function (file) {
-      if (!_.isEmpty(chunks))
+      if (!_.isEmpty(chunks)) {
         chunks.push("\n\n\n\n\n\n");
+      }
       chunks.push(file.getPrelinkedOutput({
         sourceWidth: sourceWidth,
         noLineNumbers: self.noLineNumbers
@@ -168,13 +172,15 @@ var buildSymbolTree = function (symbolMap) {
 
     var walk = ret;
     _.each(parts, function (part) {
-      if (! (part in walk))
+      if (! (part in walk)) {
         walk[part] = {};
+      }
       walk = walk[part];
     });
 
-    if (value)
+    if (value) {
       walk[lastPart] = value;
+    }
   });
 
   return ret;
@@ -255,8 +261,9 @@ _.extend(File.prototype, {
     // If we don't have a JSAnalyze object, we probably are the js-analyze
     // package itself. Assume we have no global references. At the module level,
     // we'll assume that exports are global references.
-    if (!jsAnalyze)
+    if (!jsAnalyze) {
       return [];
+    }
 
     if (_.has(ASSIGNED_GLOBALS_CACHE, self.sourceHash)) {
       return ASSIGNED_GLOBALS_CACHE[self.sourceHash];
@@ -266,8 +273,9 @@ _.extend(File.prototype, {
       return (ASSIGNED_GLOBALS_CACHE[self.sourceHash] =
               _.keys(jsAnalyze.findAssignedGlobals(self.source)));
     } catch (e) {
-      if (!e.$ParseError)
+      if (!e.$ParseError) {
         throw e;
+      }
 
       var errorOptions = {
         file: self.sourcePath,
@@ -476,8 +484,9 @@ _.extend(File.prototype, {
 // (bannerWidth - 6); if bannerWidth is not provided, the smallest width that
 // fits is used.
 var banner = function (lines, bannerWidth) {
-  if (!bannerWidth)
+  if (!bannerWidth) {
     bannerWidth = 6 + _.max(lines, function (x) { return x.length; }).length;
+  }
 
   var divider = dividerLine(bannerWidth);
   var spacer = "// " + new Array(bannerWidth - 6 + 1).join(' ') + " //\n";
@@ -637,8 +646,9 @@ var link = function (options) {
   var ret = [];
   _.each(options.prelinkFiles, function (file) {
     if (file.sourceMap) {
-      if (options.includeSourceMapInstructions)
+      if (options.includeSourceMapInstructions) {
         header = SOURCE_MAP_INSTRUCTIONS_COMMENT + "\n\n" + header;
+      }
 
       // Bias the source map by the length of the header without
       // (fully) parsing and re-serializing it. (We used to do this
@@ -647,8 +657,9 @@ var link = function (options) {
       // if we could use "index maps" for this (the 'sections' key),
       // as that would let us avoid even JSON-parsing the source map,
       // but that doesn't seem to be supported by Firefox yet.
-      if (header.charAt(header.length - 1) !== "\n")
-        header += "\n"; // make sure it's a whole number of lines
+      if (header.charAt(header.length - 1) !== "\n") {
+        header += "\n";
+      } // make sure it's a whole number of lines
       var headerLines = header.split('\n').length - 1;
       var sourceMapJson = JSON.parse(file.sourceMap);
       sourceMapJson.mappings = (new Array(headerLines + 1).join(';')) +
@@ -684,8 +695,9 @@ var getHeader = function (options) {
 var getImportCode = function (imports, header, omitvar) {
   var self = this;
 
-  if (_.isEmpty(imports))
+  if (_.isEmpty(imports)) {
     return "";
+  }
 
   // Imports
   var scratch = {};

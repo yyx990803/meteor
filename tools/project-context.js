@@ -37,8 +37,9 @@ function ProjectContext(options) {
   var self = this;
   assert.ok(self instanceof ProjectContext);
 
-  if (!options.projectDir)
+  if (!options.projectDir) {
     throw Error("missing projectDir!");
+  }
 
   self.originalOptions = options;
   self.reset();
@@ -99,8 +100,9 @@ _.extend(ProjectContext.prototype, {
     // Set by some tests to override the official catalog.
     self._officialCatalog = options.officialCatalog || catalog.official;
 
-    if (options.alwaysWritePackageMap && options.neverWritePackageMap)
+    if (options.alwaysWritePackageMap && options.neverWritePackageMap) {
       throw Error("always or never?");
+    }
 
     // Set by 'meteor create' and 'meteor update' to ensure that
     // .meteor/versions is always written even if release.current does not match
@@ -233,14 +235,16 @@ _.extend(ProjectContext.prototype, {
         // This error gets thrown if you request to go to a stage that's earlier
         // than where you started. Note that the error will be mildly confusing
         // because the key of STAGE does not match the value.
-        if (self.completedStage === STAGE.SAVE_CHANGED_METADATA)
+        if (self.completedStage === STAGE.SAVE_CHANGED_METADATA) {
           throw Error("can't find requested stage " + targetStage);
+        }
 
         // The actual value of STAGE.FOO is the name of the method that takes
         // you to the next step after FOO.
         self[self._completedStage]();
-        if (buildmessage.jobHasMessages())
+        if (buildmessage.jobHasMessages()) {
           return;
+        }
       }
     });
   },
@@ -266,56 +270,64 @@ _.extend(ProjectContext.prototype, {
     buildmessage.enterJob('reading project metadata', function () {
       // Ensure this is actually a project directory.
       self._ensureProjectDir();
-      if (buildmessage.jobHasMessages())
+      if (buildmessage.jobHasMessages()) {
         return;
+      }
 
       // Read .meteor/release.
       self.releaseFile = new exports.ReleaseFile({
         projectDir: self.projectDir
       });
-      if (buildmessage.jobHasMessages())
+      if (buildmessage.jobHasMessages()) {
         return;
+      }
 
       // Read .meteor/packages.
       self.projectConstraintsFile = new exports.ProjectConstraintsFile({
         projectDir: self.projectDir
       });
-      if (buildmessage.jobHasMessages())
+      if (buildmessage.jobHasMessages()) {
         return;
+      }
 
       // Read .meteor/versions.
       self.packageMapFile = new exports.PackageMapFile({
         filename: self._packageMapFilename
       });
-      if (buildmessage.jobHasMessages())
+      if (buildmessage.jobHasMessages()) {
         return;
+      }
 
       // Read .meteor/cordova-plugins.
       self.cordovaPluginsFile = new exports.CordovaPluginsFile({
         projectDir: self.projectDir
       });
-      if (buildmessage.jobHasMessages())
+      if (buildmessage.jobHasMessages()) {
         return;
+      }
 
       // Read .meteor/platforms, creating it if necessary.
       self.platformList = new exports.PlatformList({
         projectDir: self.projectDir
       });
-      if (buildmessage.jobHasMessages())
+      if (buildmessage.jobHasMessages()) {
         return;
+      }
 
       // Read .meteor/.id, creating it if necessary.
       self._ensureAppIdentifier();
-      if (buildmessage.jobHasMessages())
+      if (buildmessage.jobHasMessages()) {
         return;
+      }
 
       // Set up an object that knows how to read and write
       // .meteor/.finished-upgraders.
       self.finishedUpgraders = new exports.FinishedUpgraders({
         projectDir: self.projectDir
       });
-      if (buildmessage.jobHasMessages())
+      if (buildmessage.jobHasMessages()) {
         return;
+      }
     });
 
     self._completedStage = STAGE.READ_PROJECT_METADATA;
@@ -478,8 +490,9 @@ _.extend(ProjectContext.prototype, {
                 resolveOptions);
             });
         } catch (e) {
-          if (!e.constraintSolverError && !e.versionParserError)
+          if (!e.constraintSolverError && !e.versionParserError) {
             throw e;
+          }
           // If the contraint solver gave us an error, refreshing
           // might help to get new packages (see the comment on
           // missingPreviousVersionIsError above).  If it's a
@@ -490,8 +503,9 @@ _.extend(ProjectContext.prototype, {
             { tags: { refreshCouldHelp: !!e.constraintSolverError }});
         }
 
-        if (buildmessage.jobHasMessages())
+        if (buildmessage.jobHasMessages()) {
           return;
+        }
 
         self.packageMap = new packageMapModule.PackageMap(solution.answer, {
           localCatalog: self.localCatalog
@@ -611,8 +625,9 @@ _.extend(ProjectContext.prototype, {
 
   _addReleaseConstraints: function (depsAndConstraints) {
     var self = this;
-    if (! self._releaseForConstraints)
+    if (! self._releaseForConstraints) {
       return;
+    }
     _.each(self._releaseForConstraints.packages, function (version, packageName) {
       var constraint = utils.parsePackageConstraint(
         packageName + "@=" + version);
@@ -672,16 +687,18 @@ _.extend(ProjectContext.prototype, {
   _downloadMissingPackages: function () {
     var self = this;
     buildmessage.assertInJob();
-    if (!self.packageMap)
+    if (!self.packageMap) {
       throw Error("which packages to download?");
+    }
 
     catalog.runAndRetryWithRefreshIfHelpful(function () {
       buildmessage.enterJob("downloading missing packages", function () {
         self.tropohouse.downloadPackagesMissingFromMap(self.packageMap, {
           serverArchitectures: self._serverArchitectures
         });
-        if (buildmessage.jobHasMessages())
+        if (buildmessage.jobHasMessages()) {
           return;
+        }
         self._completedStage = STAGE.DOWNLOAD_MISSING_PACKAGES;
       });
     });
@@ -716,8 +733,9 @@ _.extend(ProjectContext.prototype, {
     var self = this;
 
     // Save any changes to .meteor/packages.
-    if (! self._neverWriteProjectConstraintsFile)
+    if (! self._neverWriteProjectConstraintsFile) {
       self.projectConstraintsFile.writeIfModified();
+    }
 
     // Write .meteor/versions if the command always wants to (create/update),
     // or if the release of the app matches the release of the process.
@@ -770,13 +788,15 @@ _.extend(exports.ProjectConstraintsFile.prototype, {
     // No .meteor/packages? This isn't a very good project directory. In fact,
     // that's the definition of a project directory! (And that should have been
     // fixed by _ensureProjectDir!)
-    if (contents === null)
+    if (contents === null) {
       throw Error("packages file missing: " + self.filename);
+    }
 
     var lines = files.splitBufferToLines(contents);
     // Don't keep a record for the space at the end of the file.
-    if (lines.length && _.last(lines) === '')
+    if (lines.length && _.last(lines) === '') {
       lines.pop();
+    }
 
     _.each(lines, function (line) {
       var lineRecord =
@@ -799,14 +819,16 @@ _.extend(exports.ProjectConstraintsFile.prototype, {
       line = match[2];
 
       // No constraint? Leave lineRecord.constraint null and continue.
-      if (line === '')
+      if (line === '') {
         return;
+      }
       lineRecord.constraint = utils.parsePackageConstraint(line, {
         useBuildmessage: true,
         buildmessageFile: self.filename
       });
-      if (! lineRecord.constraint)
-        return;  // recover by ignoring
+      if (! lineRecord.constraint) {
+        return;
+      }  // recover by ignoring
 
       if (_.has(self._constraintMap, lineRecord.constraint.package)) {
         buildmessage.error(
@@ -845,8 +867,9 @@ _.extend(exports.ProjectConstraintsFile.prototype, {
         self._readFile();
       });
     // We shouldn't choke on something we just wrote!
-    if (messages.hasMessages())
+    if (messages.hasMessages()) {
       throw Error("wrote bad .meteor/packages: " + messages.formatMessages());
+    }
   },
 
   // Iterates over all constraints, in the format returned by
@@ -854,8 +877,9 @@ _.extend(exports.ProjectConstraintsFile.prototype, {
   eachConstraint: function (iterator) {
     var self = this;
     _.each(self._constraintLines, function (lineRecord) {
-      if (lineRecord.constraint)
+      if (lineRecord.constraint) {
         iterator(lineRecord.constraint);
+      }
     });
   },
 
@@ -863,8 +887,9 @@ _.extend(exports.ProjectConstraintsFile.prototype, {
   // utils.parsePackageConstraint, or null.
   getConstraint: function (name) {
     var self = this;
-    if (_.has(self._constraintMap, name))
+    if (_.has(self._constraintMap, name)) {
       return self._constraintMap[name].constraint;
+    }
     return null;
   },
 
@@ -889,8 +914,9 @@ _.extend(exports.ProjectConstraintsFile.prototype, {
         return;
       }
       lineRecord = self._constraintMap[constraintToAdd.package];
-      if (_.isEqual(constraintToAdd, lineRecord.constraint))
-        return;  // nothing changed
+      if (_.isEqual(constraintToAdd, lineRecord.constraint)) {
+        return;
+      }  // nothing changed
       lineRecord.constraint = constraintToAdd;
       self._modified = true;
     });
@@ -952,8 +978,9 @@ _.extend(exports.PackageMapFile.prototype, {
     self.fileHash = fileInfo.hash;
     // No .meteor/versions? That's OK, you just get to start your calculation
     // from scratch.
-    if (contents === null)
+    if (contents === null) {
       return;
+    }
 
     buildmessage.assertInCapture();
     var lines = files.splitBufferToLines(contents);
@@ -961,21 +988,24 @@ _.extend(exports.PackageMapFile.prototype, {
       // We don't allow comments here, since it's cruel to allow comments in a
       // file when you're going to overwrite them anyway.
       line = files.trimSpace(line);
-      if (line === '')
+      if (line === '') {
         return;
+      }
       var packageVersion = utils.parsePackageAndVersion(line, {
         useBuildmessage: true,
         buildmessageFile: self.filename
       });
-      if (!packageVersion)
-        return;  // recover by ignoring
+      if (!packageVersion) {
+        return;
+      }  // recover by ignoring
 
       // If a package appears multiple times in .meteor/versions, we just ignore
       // the second one. This file is more meteor-controlled than
       // .meteor/packages and people shouldn't be surprised to see it
       // automatically fixed.
-      if (_.has(self._versions, packageVersion.package))
+      if (_.has(self._versions, packageVersion.package)) {
         return;
+      }
 
       self._versions[packageVersion.package] = packageVersion.version;
     });
@@ -997,8 +1027,9 @@ _.extend(exports.PackageMapFile.prototype, {
 
     // Only write the file if some version changed. (We don't need to do no-op
     // writes, even if they fix sorting in the file.)
-    if (_.isEqual(self._versions, newVersions))
+    if (_.isEqual(self._versions, newVersions)) {
       return;
+    }
 
     self._versions = newVersions;
     var packageNames = _.keys(self._versions);
@@ -1123,14 +1154,16 @@ _.extend(exports.CordovaPluginsFile.prototype, {
     self._plugins = {};
     var contents = watch.readAndWatchFile(self.watchSet, self.filename);
     // No file?  No plugins.
-    if (contents === null)
+    if (contents === null) {
       return;
+    }
 
     var lines = files.splitBufferToLines(contents);
     _.each(lines, function (line) {
       line = files.trimSpaceAndComments(line);
-      if (line === '')
+      if (line === '') {
         return;
+      }
 
       // We just do a standard split here, not utils.parsePackageConstraint,
       // since cordova plugins don't necessary obey the same naming conventions
@@ -1173,8 +1206,9 @@ _.extend(exports.CordovaPluginsFile.prototype, {
         self._readFile();
       });
     // We shouldn't choke on something we just wrote!
-    if (messages.hasMessages())
+    if (messages.hasMessages()) {
       throw Error("wrote bad .meteor/packages: " + messages.formatMessages());
+    }
   }
 });
 
@@ -1227,8 +1261,9 @@ _.extend(exports.ReleaseFile.prototype, {
     var contents = watch.readAndWatchFile(self.watchSet, self.filename);
     // If file doesn't exist, leave unnormalizedReleaseName empty; fileMissing
     // will be true.
-    if (contents === null)
+    if (contents === null) {
       return;
+    }
 
     var lines = _.compact(_.map(files.splitBufferToLines(contents),
                                 files.trimSpaceAndComments));
@@ -1272,8 +1307,9 @@ _.extend(exports.FinishedUpgraders.prototype, {
     var lines = files.getLinesOrEmpty(self.filename);
     _.each(lines, function (line) {
       line = files.trimSpaceAndComments(line);
-      if (line === '')
+      if (line === '') {
         return;
+      }
       upgraders.push(line);
     });
     return upgraders;
@@ -1286,8 +1322,9 @@ _.extend(exports.FinishedUpgraders.prototype, {
     try {
       current = files.readFile(self.filename, 'utf8');
     } catch (e) {
-      if (e.code !== 'ENOENT')
+      if (e.code !== 'ENOENT') {
         throw e;
+      }
     }
 
     var appendText = '';

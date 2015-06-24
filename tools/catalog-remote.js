@@ -268,8 +268,9 @@ _.extend(Db.prototype, {
       Console.debug("Creating database directory", dbFile);
 
       var folder = files.pathDirname(dbFile);
-      if ( !files.mkdir_p(folder) )
+      if (!files.mkdir_p(folder)) {
         throw new Error("Could not create folder at " + folder);
+      }
     }
 
     Console.debug("Opening db file", dbFile);
@@ -493,7 +494,9 @@ _.extend(Table.prototype, {
     for (var i = 0; i < self.jsonFields.length; i++) {
       var jsonField = self.jsonFields[i];
       var sqlColumn = jsonField;
-      if (i != 0) sql += ", ";
+      if (i != 0) {
+        sql += ", ";
+      }
       sql += sqlColumn + " STRING";
       if (sqlColumn === '_id') {
         sql += " PRIMARY KEY";
@@ -566,8 +569,9 @@ _.extend(RemoteCatalog.prototype, {
     var self = this;
     var match = this._columnsQuery(
       "SELECT version FROM versions WHERE packageName=?", name);
-    if (match === null)
+    if (match === null) {
       return [];
+    }
     return _.pluck(match, 'version').sort(VersionParser.compare);
   },
 
@@ -577,8 +581,9 @@ _.extend(RemoteCatalog.prototype, {
     var self = this;
     var versionRecords = this._contentQuery(
       "SELECT content FROM versions WHERE packageName=?", [name]);
-    if (! versionRecords)
+    if (! versionRecords) {
       return [];
+    }
     versionRecords.sort(function (a, b) {
       return VersionParser.compare(a.version, b.version);
     });
@@ -592,16 +597,18 @@ _.extend(RemoteCatalog.prototype, {
     var latest = _.find(versions, function (version) {
       return !/-/.test(version);
     });
-    if (!latest)
+    if (!latest) {
       return null;
+    }
     return self.getVersion(name, latest);
   },
 
   getPackage: function (name, options) {
     var result = this._contentQuery(
       "SELECT content FROM packages WHERE name=?", name);
-    if (!result || result.length === 0)
+    if (!result || result.length === 0) {
       return null;
+    }
     if (result.length !== 1) {
       throw new Error("Found multiple packages matching name: " + name);
     }
@@ -614,8 +621,9 @@ _.extend(RemoteCatalog.prototype, {
         "(SELECT _id FROM versions WHERE versions.packageName=? AND " +
         "versions.version=?)",
       [name, version]);
-    if (!result || result.length === 0)
+    if (!result || result.length === 0) {
       return null;
+    }
     return result;
   },
 
@@ -653,8 +661,9 @@ _.extend(RemoteCatalog.prototype, {
     var self = this;
     var result = self._contentQuery(
       "SELECT content FROM releaseTracks WHERE name=?", name);
-    if (!result || result.length === 0)
+    if (!result || result.length === 0) {
       return null;
+    }
     return result[0];
   },
 
@@ -663,8 +672,9 @@ _.extend(RemoteCatalog.prototype, {
     var result = self._contentQuery(
       "SELECT content FROM releaseVersions WHERE track=? AND version=?",
       [track, version]);
-    if (!result || result.length === 0)
+    if (!result || result.length === 0) {
       return null;
+    }
     return result[0];
   },
 
@@ -764,8 +774,9 @@ _.extend(RemoteCatalog.prototype, {
       throw e;
     }
 
-    if (self.offline)
+    if (self.offline) {
       return false;
+    }
 
     if (options.maxAge) {
       var lastSync = self.getMetadata(METADATA_LAST_SYNC);
@@ -812,8 +823,9 @@ _.extend(RemoteCatalog.prototype, {
       "SELECT content FROM releaseVersions WHERE track=?", track);
 
     var recommended = _.filter(result, function (v) {
-      if (!v.recommended)
+      if (!v.recommended) {
         return false;
+      }
       return !laterThanOrderKey || v.orderKey > laterThanOrderKey;
     });
 
@@ -846,8 +858,9 @@ _.extend(RemoteCatalog.prototype, {
   getDefaultReleaseVersion: function (track) {
     var self = this;
     var versionRecord = self.getDefaultReleaseVersionRecord(track);
-    if (! versionRecord)
+    if (! versionRecord) {
       throw new Error("Can't get default release version for track " + track);
+    }
     return _.pick(versionRecord, ["track", "version" ]);
   },
 
@@ -856,12 +869,14 @@ _.extend(RemoteCatalog.prototype, {
   getDefaultReleaseVersionRecord: function (track) {
     var self = this;
 
-    if (!track)
+    if (!track) {
       track = exports.DEFAULT_TRACK;
+    }
 
     var versions = self.getSortedRecommendedReleaseRecords(track);
-    if (!versions.length)
+    if (!versions.length) {
       return null;
+    }
     return  versions[0];
   },
 
@@ -966,8 +981,9 @@ _.extend(RemoteCatalog.prototype, {
       return self.tableBannersShown.find(txn, releaseName);
     });
     // We've never printed a banner for this release.
-    if (! row)
+    if (! row) {
       return true;
+    }
     try {
       var lastShown = new Date(JSON.parse(row.lastShown));
       return lastShown < bannerDate;

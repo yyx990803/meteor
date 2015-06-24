@@ -177,8 +177,9 @@ exports.ignoreFiles = [
 ];
 
 var rejectBadPath = function (p) {
-  if (p.match(/\.\./))
+  if (p.match(/\.\./)) {
     throw new Error("bad path: " + p);
+  }
 };
 
 var stripLeadingSlash = function (p) {
@@ -238,10 +239,12 @@ var NodeModulesDirectory = function (options) {
 var File = function (options) {
   var self = this;
 
-  if (options.data && ! (options.data instanceof Buffer))
+  if (options.data && ! (options.data instanceof Buffer)) {
     throw new Error('File contents must be provided as a Buffer');
-  if (! options.sourcePath && ! options.data)
+  }
+  if (! options.sourcePath && ! options.data) {
     throw new Error("Must provide either sourcePath or data");
+  }
 
   // The absolute path in the filesystem from which we loaded (or will
   // load) this file (null if the file does not correspond to one on
@@ -291,8 +294,9 @@ _.extend(File.prototype, {
 
   hash: function () {
     var self = this;
-    if (! self._hash)
+    if (! self._hash) {
       self._hash = watch.sha1(self.contents());
+    }
     return self._hash;
   },
 
@@ -303,9 +307,9 @@ _.extend(File.prototype, {
     if (! self._contents) {
       if (! self.sourcePath) {
         throw new Error("Have neither contents nor sourcePath for file");
-      }
-      else
+      } else {
         self._contents = files.readFile(self.sourcePath);
+      }
     }
 
     return encoding ? self._contents.toString(encoding) : self._contents;
@@ -313,8 +317,9 @@ _.extend(File.prototype, {
 
   setContents: function (b) {
     var self = this;
-    if (!(b instanceof Buffer))
+    if (!(b instanceof Buffer)) {
       throw new Error("Must set contents to a Buffer");
+    }
     self._contents = b;
     // Un-cache hash.
     self._hash = null;
@@ -342,12 +347,15 @@ _.extend(File.prototype, {
   // Append "?<hash>" to the URL and mark the file as cacheable.
   addCacheBuster: function () {
     var self = this;
-    if (! self.url)
+    if (! self.url) {
       throw new Error("File must have a URL");
-    if (self.cacheable)
-      return; // eg, already got setUrlToHash
-    if (/\?/.test(self.url))
+    }
+    if (self.cacheable) {
+      return;
+    } // eg, already got setUrlToHash
+    if (/\?/.test(self.url)) {
       throw new Error("URL already has a query string");
+    }
     self.url += "?" + self.hash();
     self.cacheable = true;
   },
@@ -360,8 +368,9 @@ _.extend(File.prototype, {
     var self = this;
     var url = relPath;
 
-    if (url.charAt(0) !== '/')
+    if (url.charAt(0) !== '/') {
       url = '/' + url;
+    }
 
     // XXX replacing colons with underscores as colon is hard to escape later
     // on different targets and generally is not a good separator for web.
@@ -372,10 +381,11 @@ _.extend(File.prototype, {
   setTargetPathFromRelPath: function (relPath) {
     var self = this;
     // XXX hack
-    if (relPath.match(/^packages\//) || relPath.match(/^assets\//))
+    if (relPath.match(/^packages\//) || relPath.match(/^assets\//)) {
       self.targetPath = relPath;
-    else
+    } else {
       self.targetPath = files.pathJoin('app', relPath);
+    }
 
     // XXX same as in setUrlFromRelPath, we replace colons with a different
     // separator to avoid difficulties further. E.g.: on Windows it is not a
@@ -387,8 +397,9 @@ _.extend(File.prototype, {
   setSourceMap: function (sourceMap, root) {
     var self = this;
 
-    if (typeof sourceMap !== "string")
+    if (typeof sourceMap !== "string") {
       throw new Error("sourceMap must be given as a string");
+    }
     self.sourceMap = sourceMap;
     self.sourceMapRoot = root;
   },
@@ -396,8 +407,9 @@ _.extend(File.prototype, {
   // note: this assets object may be shared among multiple files!
   setAssets: function (assets) {
     var self = this;
-    if (!_.isEmpty(assets))
+    if (!_.isEmpty(assets)) {
       self.assets = assets;
+    }
   }
 });
 
@@ -550,8 +562,9 @@ _.extend(Target.prototype, {
         unibuild && rootUnibuilds.push(unibuild);
       });
 
-      if (buildmessage.jobHasMessages())
+      if (buildmessage.jobHasMessages()) {
         return;
+      }
 
       // PHASE 1: Which unibuilds will be used?
       //
@@ -565,8 +578,9 @@ _.extend(Target.prototype, {
       var usedUnibuilds = {};  // Map from unibuild.id to Unibuild.
       self.usedPackages = {};  // Map from package name to true;
       var addToGetsUsed = function (unibuild) {
-        if (_.has(usedUnibuilds, unibuild.id))
+        if (_.has(usedUnibuilds, unibuild.id)) {
           return;
+        }
         usedUnibuilds[unibuild.id] = unibuild;
         if (unibuild.kind === 'main') {
           // Only track real packages, not plugin pseudo-packages.
@@ -581,8 +595,9 @@ _.extend(Target.prototype, {
       };
       _.each(rootUnibuilds, addToGetsUsed);
 
-      if (buildmessage.jobHasMessages())
+      if (buildmessage.jobHasMessages()) {
         return;
+      }
 
       // PHASE 2: In what order should we load the unibuilds?
       //
@@ -607,8 +622,9 @@ _.extend(Target.prototype, {
       // self.unibuilds, then adds unibuild itself.
       var add = function (unibuild) {
         // If this has already been added, there's nothing to do.
-        if (!_.has(needed, unibuild.id))
+        if (!_.has(needed, unibuild.id)) {
           return;
+        }
 
         // Process each ordered dependency. (If we have an unordered dependency
         // `u`, then there's no reason to add it *now*, and for all we know, `u`
@@ -648,9 +664,12 @@ _.extend(Target.prototype, {
         // Get an arbitrary unibuild from those that remain, or break if none
         // remain.
         var first = null;
-        for (first in needed) break;
-        if (! first)
+        for (first in needed) {
           break;
+        }
+        if (! first) {
+          break;
+        }
         // Now add it, after its ordered dependencies.
         add(needed[first]);
       }
@@ -689,8 +708,9 @@ _.extend(Target.prototype, {
       // resource (for os unibuilds).
       var unibuildAssets = {};
       _.each(resources, function (resource) {
-        if (resource.type !== "asset")
+        if (resource.type !== "asset") {
           return;
+        }
 
         var f = new File({
           info: 'unbuild ' + resource,
@@ -704,9 +724,9 @@ _.extend(Target.prototype, {
               : stripLeadingSlash(resource.servePath);
         f.setTargetPathFromRelPath(relPath);
 
-        if (isWeb)
+        if (isWeb) {
           f.setUrlFromRelPath(resource.servePath);
-        else {
+        } else {
           unibuildAssets[resource.path] = resource.data;
         }
 
@@ -715,11 +735,12 @@ _.extend(Target.prototype, {
 
       // Now look for the other kinds of resources.
       _.each(resources, function (resource) {
-        if (resource.type === "asset")
-          return;  // already handled
+        if (resource.type === "asset") {
+          return;
+        }  // already handled
 
         if (_.contains(["js", "css"], resource.type)) {
-          if (resource.type === "css" && ! isWeb)
+          if (resource.type === "css" && ! isWeb) {
             // XXX might be nice to throw an error here, but then we'd
             // have to make it so that package.js ignores css files
             // that appear in the server directories in an app tree
@@ -727,6 +748,7 @@ _.extend(Target.prototype, {
             // XXX XXX can't we easily do that in the css handler in
             // meteor.js?
             return;
+          }
 
           var f = new File({ info: 'resource ' + resource.servePath, data: resource.data, cacheable: false});
 
@@ -739,8 +761,9 @@ _.extend(Target.prototype, {
 
           if (resource.type === "js" && isOs) {
             // Hack, but otherwise we'll end up putting app assets on this file.
-            if (resource.servePath !== "/packages/global-imports.js")
+            if (resource.servePath !== "/packages/global-imports.js") {
               f.setAssets(unibuildAssets);
+            }
 
             if (! isApp && unibuild.nodeModulesPath) {
               var nmd = self.nodeModulesDirectories[unibuild.nodeModulesPath];
@@ -778,8 +801,9 @@ _.extend(Target.prototype, {
         }
 
         if (_.contains(["head", "body"], resource.type)) {
-          if (! isWeb)
+          if (! isWeb) {
             throw new Error("HTML segments can only go to the client");
+          }
           self[resource.type].push(resource.data);
           return;
         }
@@ -837,8 +861,9 @@ _.extend(Target.prototype, {
   // version that has already been added.
   _addCordovaDependency: function (name, version, override) {
     var self = this;
-    if (! self.cordovaDependencies)
+    if (! self.cordovaDependencies) {
       return;
+    }
 
     if (override) {
       self.cordovaDependencies[name] = version;
@@ -859,8 +884,9 @@ _.extend(Target.prototype, {
   // of the same plugins that packages are using.
   _addDirectCordovaDependencies: function () {
     var self = this;
-    if (! self.cordovaDependencies)
+    if (! self.cordovaDependencies) {
       return;
+    }
 
     _.each(self.cordovaPluginsFile.getPluginVersions(), function (version, name) {
       self._addCordovaDependency(
@@ -917,9 +943,15 @@ var _minify = function (UglifyJS, key, files, options) {
   });
 
   var phases = 2;
-  if (options.compress) phases++;
-  if (options.mangle) phases++;
-  if (options.output) phases++;
+  if (options.compress) {
+    phases++;
+  }
+  if (options.mangle) {
+    phases++;
+  }
+  if (options.output) {
+    phases++;
+  }
 
   var progress = {current: 0, end: totalFileSize * phases, done: false};
   var progressTracker = buildmessage.getCurrentProgressTracker();
@@ -931,8 +963,9 @@ var _minify = function (UglifyJS, key, files, options) {
   if (options.spidermonkey) {
     toplevel = UglifyJS.AST_Node.from_mozilla_ast(files);
   } else {
-    if (typeof files == "string")
+    if (typeof files == "string") {
       files = [ files ];
+    }
     buildmessage.forkJoin({title: 'minifying: parsing ' + key}, files, function (file) {
       var code = options.fromString
         ? file
@@ -950,28 +983,34 @@ var _minify = function (UglifyJS, key, files, options) {
 
   // 2. compress
   var compress;
-  if (options.compress) buildmessage.enterJob({title: "minify: compress 1 " + key}, function () {
-    compress = { warnings: options.warnings };
-    UglifyJS.merge(compress, options.compress);
-    toplevel.figure_out_scope();
-  });
-  if (options.compress) buildmessage.enterJob({title: "minify: compress 2 " + key}, function () {
-    var sq = UglifyJS.Compressor(compress);
-    toplevel = toplevel.transform(sq);
+  if (options.compress) {
+    buildmessage.enterJob({title: "minify: compress 1 " + key}, function () {
+      compress = { warnings: options.warnings };
+      UglifyJS.merge(compress, options.compress);
+      toplevel.figure_out_scope();
+    });
+  }
+  if (options.compress) {
+    buildmessage.enterJob({title: "minify: compress 2 " + key}, function () {
+      var sq = UglifyJS.Compressor(compress);
+      toplevel = toplevel.transform(sq);
 
-    progress.current += totalFileSize;
-    progressTracker.reportProgress(progress);
-  });
+      progress.current += totalFileSize;
+      progressTracker.reportProgress(progress);
+    });
+  }
 
   // 3. mangle
-  if (options.mangle) buildmessage.enterJob({title: "minify: mangling " + key}, function () {
-    toplevel.figure_out_scope();
-    toplevel.compute_char_frequency();
-    toplevel.mangle_names(options.mangle);
+  if (options.mangle) {
+    buildmessage.enterJob({title: "minify: mangling " + key}, function () {
+      toplevel.figure_out_scope();
+      toplevel.compute_char_frequency();
+      toplevel.mangle_names(options.mangle);
 
-    progress.current += totalFileSize;
-    progressTracker.reportProgress(progress);
-  });
+      progress.current += totalFileSize;
+      progressTracker.reportProgress(progress);
+    });
+  }
 
   // 4. output
   var inMap = options.inSourceMap;
@@ -993,12 +1032,14 @@ var _minify = function (UglifyJS, key, files, options) {
       }
     }
   }
-  if (options.output) buildmessage.enterJob({title: "minify: merging " + key}, function () {
-    UglifyJS.merge(output, options.output);
+  if (options.output) {
+    buildmessage.enterJob({title: "minify: merging " + key}, function () {
+      UglifyJS.merge(output, options.output);
 
-    progress.current += totalFileSize;
-    progressTracker.reportProgress(progress);
-  });
+      progress.current += totalFileSize;
+      progressTracker.reportProgress(progress);
+    });
+  }
 
 
   var stream;
@@ -1034,8 +1075,9 @@ var ClientTarget = function (options) {
   self.head = [];
   self.body = [];
 
-  if (! archinfo.matches(self.arch, "web"))
+  if (! archinfo.matches(self.arch, "web")) {
     throw new Error("ClientTarget targeting something that isn't a client?");
+  }
 };
 
 util.inherits(ClientTarget, Target);
@@ -1081,8 +1123,9 @@ _.extend(ClientTarget.prototype, {
     // Overwrite the CSS files list with the new concatenated file
     var stringifiedCss = CssTools.stringifyCss(self._cssAstCache,
                                                { sourcemap: true });
-    if (! stringifiedCss.code)
+    if (! stringifiedCss.code) {
       return;
+    }
 
     self.css = [new File({ info: 'combined css', data: new Buffer(stringifiedCss.code, 'utf8') })];
 
@@ -1098,8 +1141,9 @@ _.extend(ClientTarget.prototype, {
       new sourcemap.SourceMapConsumer(stringifiedCss.map));
 
     _.each(originals, function (file, name) {
-      if (! file.sourceMap)
+      if (! file.sourceMap) {
         return;
+      }
       try {
         newMap.applySourceMap(
           new sourcemap.SourceMapConsumer(file.sourceMap), name);
@@ -1293,16 +1337,18 @@ _.extend(JsImage.prototype, {
       assetPath = files.convertToStandardPath(assetPath);
       var fut;
       if (! callback) {
-        if (! Fiber.current)
+        if (! Fiber.current) {
           throw new Error("The synchronous Assets API can " +
                           "only be called from within a Fiber.");
+        }
         fut = new Future();
         callback = fut.resolver();
       }
       var _callback = function (err, result) {
-        if (result && ! encoding)
+        if (result && ! encoding) {
           // Sadly, this copies in Node 0.10.
           result = new Uint8Array(result);
+        }
         callback(err, result);
       };
 
@@ -1313,8 +1359,9 @@ _.extend(JsImage.prototype, {
         var result = encoding ? buffer.toString(encoding) : buffer;
         _callback(null, result);
       }
-      if (fut)
+      if (fut) {
         return fut.wait();
+      }
     };
 
     // Eval each JavaScript file, providing a 'Npm' symbol in the same
@@ -1324,8 +1371,9 @@ _.extend(JsImage.prototype, {
     // static assets.
     var failed = false;
     _.each(self.jsToLoad, function (item) {
-      if (failed)
+      if (failed) {
         return;
+      }
 
       var env = _.extend({
         Package: ret,
@@ -1468,8 +1516,9 @@ _.extend(JsImage.prototype, {
     // JavaScript sources
     var load = [];
     _.each(self.jsToLoad, function (item) {
-      if (! item.targetPath)
+      if (! item.targetPath) {
         throw new Error("No targetPath?");
+      }
 
       var loadItem = {};
 
@@ -1579,9 +1628,10 @@ JsImage.readFromDisk = Profile("JsImage.readFromDisk", function (controlFilePath
   var json = JSON.parse(files.readFile(controlFilePath));
   var dir = files.pathDirname(controlFilePath);
 
-  if (json.format !== "javascript-image-pre1")
+  if (json.format !== "javascript-image-pre1") {
     throw new Error("Unsupported plugin format: " +
                     JSON.stringify(json.format));
+  }
 
   ret.arch = json.arch;
 
@@ -1635,10 +1685,11 @@ var JsImageTarget = function (options) {
   var self = this;
   Target.apply(this, arguments);
 
-  if (! archinfo.matches(self.arch, "os"))
+  if (! archinfo.matches(self.arch, "os")) {
     // Conceivably we could support targeting the client as long as
     // no native node modules were used.  No use case for that though.
     throw new Error("JsImageTarget targeting something unusual?");
+  }
 };
 
 util.inherits(JsImageTarget, Target);
@@ -1680,8 +1731,9 @@ var ServerTarget = function (options, ...args) {
   self.clientTargets = options.clientTargets;
   self.releaseName = options.releaseName;
 
-  if (! archinfo.matches(self.arch, "os"))
+  if (! archinfo.matches(self.arch, "os")) {
     throw new Error("ServerTarget targeting something that isn't a server?");
+  }
 };
 
 util.inherits(ServerTarget, JsImageTarget);
@@ -1798,11 +1850,13 @@ _.extend(ServerTarget.prototype, {
 });
 
 var writeFile = Profile("bundler..writeFile", function (file, builder) {
-  if (! file.targetPath)
+  if (! file.targetPath) {
     throw new Error("No targetPath?");
+  }
   var contents = file.contents();
-  if (! (contents instanceof Buffer))
+  if (! (contents instanceof Buffer)) {
     throw new Error("contents not a Buffer?");
+  }
   // XXX should probably use sanitize: true, but that will have
   // to wait until the server is actually driven by the manifest
   // (rather than just serving all of the files in a certain
@@ -2040,8 +2094,9 @@ exports.bundle = function (options) {
   var targets = {};
   var nodePath = [];
 
-  if (! release.usingRightReleaseForApp(projectContext))
+  if (! release.usingRightReleaseForApp(projectContext)) {
     throw new Error("running wrong release for app?");
+  }
 
   var messages = buildmessage.capture({
     title: "building the application"
@@ -2075,8 +2130,9 @@ exports.bundle = function (options) {
         releaseName: releaseName,
         includeDebug: buildOptions.includeDebug
       };
-      if (clientTargets)
+      if (clientTargets) {
         targetOptions.clientTargets = clientTargets;
+      }
 
       var server = new ServerTarget(targetOptions);
 
@@ -2120,11 +2176,13 @@ exports.bundle = function (options) {
       var pathForTarget = function (target) {
         var name;
         _.each(targets, function (t, n) {
-          if (t === target)
+          if (t === target) {
             name = n;
+          }
         });
-        if (! name)
+        if (! name) {
           throw new Error("missing target?");
+        }
         return files.pathJoin('programs', name);
       };
 
@@ -2159,8 +2217,9 @@ exports.bundle = function (options) {
     success = true;
   });
 
-  if (success && messages.hasMessages())
-    success = false; // there were errors
+  if (success && messages.hasMessages()) {
+    success = false;
+  } // there were errors
 
   return {
     errors: success ? false : messages,
@@ -2211,10 +2270,12 @@ exports.bundle = function (options) {
 // namespace." It should be an easy refactor,
 exports.buildJsImage = Profile("bundler.buildJsImage", function (options) {
   buildmessage.assertInCapture();
-  if (options.npmDependencies && ! options.npmDir)
+  if (options.npmDependencies && ! options.npmDir) {
     throw new Error("Must indicate .npm directory to use");
-  if (! options.name)
+  }
+  if (! options.name) {
     throw new Error("Must provide a name");
+  }
 
   var packageSource = new PackageSource;
 

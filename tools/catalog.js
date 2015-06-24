@@ -63,8 +63,9 @@ catalog.refreshOrWarn = function (options) {
     // Online, socket hangup:
     //   Network error: wss://packages.meteor.com:80/websocket: socket hang up
 
-    if (err.errorType !== 'DDP.ConnectionError')
+    if (err.errorType !== 'DDP.ConnectionError') {
       throw err;
+    }
 
     // XXX is throwing correct for SQLite errors too? probably.
 
@@ -123,8 +124,9 @@ catalog.runAndRetryWithRefreshIfHelpful = function (attempt) {
     catalog.official.refresh();
     catalog.refreshFailed = false;
   } catch (err) {
-    if (err.errorType !== 'DDP.ConnectionError')
+    if (err.errorType !== 'DDP.ConnectionError') {
       throw err;
+    }
     // First place the previous errors in the capture.
     buildmessage.mergeMessagesIntoCurrentJob(messages);
     // Then put an error representing this DDP error.
@@ -226,8 +228,9 @@ _.extend(LayeredCatalog.prototype, {
     var latest = _.find(versions, function (version) {
       return !/-/.test(version);
     });
-    if (!latest)
+    if (!latest) {
       return null;
+    }
     return self.getVersion(name, latest);
   }
 });

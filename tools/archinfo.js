@@ -130,8 +130,9 @@ var host = function () {
   if (! _host) {
     var run = function (...args) {
       var result = files.run.apply(null, args);
-      if (! result)
+      if (! result) {
         throw new Error("can't get arch with " + args.join(" ") + "?");
+      }
       return result.replace(/\s*$/, ''); // trailing whitespace
     };
 
@@ -141,28 +142,29 @@ var host = function () {
       // Can't just test uname -m = x86_64, because Snow Leopard can
       // return other values.
       if (run('uname', '-p') !== "i386" ||
-          run('sysctl', '-n', 'hw.cpu64bit_capable') !== "1")
+          run('sysctl', '-n', 'hw.cpu64bit_capable') !== "1") {
         throw new Error("Only 64-bit Intel processors are supported on OS X");
+      }
       _host  = "os.osx.x86_64";
     }
 
     else if (platform === "linux") {
       var machine = run('uname', '-m');
-      if (_.contains(["i386", "i686", "x86"], machine))
+      if (_.contains(["i386", "i686", "x86"], machine)) {
         _host = "os.linux.x86_32";
-      else if (_.contains(["x86_64", "amd64", "ia64"], machine))
+      } else if (_.contains(["x86_64", "amd64", "ia64"], machine)) {
         _host = "os.linux.x86_64";
-      else
+      } else {
         throw new Error("Unsupported architecture: " + machine);
+      }
     }
 
     else if (platform === "win32") {
       // We also use 32 bit builds on 64 bit Windows architectures.
       _host = "os.windows.x86_32";
-    }
-
-    else
+    } else {
       throw new Error("Unsupported operating system: " + platform);
+    }
   }
 
   return _host;
@@ -191,12 +193,14 @@ var mostSpecificMatch = function (host, programs) {
   var best = null;
 
   _.each(programs, function (p) {
-    if (seen[p])
+    if (seen[p]) {
       throw new Error("Duplicate architecture: " + p);
+    }
     seen[p] = true;
     if (archinfo.matches(host, p) &&
-        (! best || p.length > best.length))
+        (! best || p.length > best.length)) {
       best = p;
+    }
   });
 
   return best;
@@ -212,8 +216,9 @@ var mostSpecificMatch = function (host, programs) {
 // 'os.linux.x86_64', return 'os.linux.x86_64'. For 'os' and 'browser', throw an
 // exception.
 var leastSpecificDescription = function (programs) {
-  if (programs.length === 0)
+  if (programs.length === 0) {
     return '';
+  }
 
   // Find the longest string
   var longest = _.max(programs, function (p) { return p.length; });
@@ -223,17 +228,19 @@ var leastSpecificDescription = function (programs) {
   // compatible with the most specific then it must be the least
   // specific compatible description.
   _.each(programs, function (p) {
-    if (! archinfo.matches(longest, p))
+    if (! archinfo.matches(longest, p)) {
       throw new Error("Incompatible architectures: '" + p + "' and '" +
                       longest + "'");
+    }
   });
 
   return longest;
 };
 
 var withoutSpecificOs = function (arch) {
-  if (arch.substr(0, 3) === 'os.')
+  if (arch.substr(0, 3) === 'os.') {
     return 'os';
+  }
   return arch;
 };
 

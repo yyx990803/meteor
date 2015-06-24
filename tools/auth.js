@@ -105,8 +105,9 @@ var sessionMethodCaller = function (methodName, options) {
     conn.apply(methodName, args, fiberHelpers.firstTimeResolver(fut));
     if (options.timeout !== undefined) {
       var timer = setTimeout(fiberHelpers.bindEnvironment(function () {
-        if (!fut.isResolved())
+        if (!fut.isResolved()) {
           fut.throw(new Error('Method call timed out'));
+        }
       }), options.timeout);
     }
     try {
@@ -115,8 +116,9 @@ var sessionMethodCaller = function (methodName, options) {
       if (timer) {
         clearTimeout(timer);
       }
-      if (! options.connection)
+      if (! options.connection) {
         conn.close();
+      }
     }
     if (result && result.session) {
       auth.setSessionId(config.getAccountsDomain(), result.session);
@@ -127,8 +129,9 @@ var sessionMethodCaller = function (methodName, options) {
 
 var readSessionData = function () {
   var sessionPath = config.getSessionFilePath();
-  if (! files.exists(sessionPath))
+  if (! files.exists(sessionPath)) {
     return {};
+  }
   return JSON.parse(files.readFile(sessionPath, { encoding: 'utf8' }));
 };
 
@@ -137,8 +140,9 @@ var writeSessionData = function (data) {
 
   var tries = 0;
   while (true) {
-    if (tries++ > 10)
+    if (tries++ > 10) {
       throw new Error("can't find a unique name for temporary file?");
+    }
 
     // Create a temporary file in the same directory where we
     // ultimately want to write the session file. Use the exclusive
@@ -170,10 +174,12 @@ var writeSessionData = function (data) {
 };
 
 var getSession = function (sessionData, domain) {
-  if (typeof (sessionData.sessions) !== "object")
+  if (typeof (sessionData.sessions) !== "object") {
     sessionData.sessions = {};
-  if (typeof (sessionData.sessions[domain]) !== "object")
+  }
+  if (typeof (sessionData.sessions[domain]) !== "object") {
     sessionData.sessions[domain] = {};
+  }
   return sessionData.sessions[domain];
 };
 
@@ -182,9 +188,9 @@ var getSession = function (sessionData, domain) {
 // We previously used:
 // - "galaxy": a login to a legacy Galaxy prototype server
 var ensureSessionType = function (session, type) {
-  if (! _.has(session, 'type'))
+  if (! _.has(session, 'type')) {
     session.type = type;
-  else if (session.type !== type) {
+  } else if (session.type !== type) {
     // Blow away whatever was there. We lose pendingRevokes but that's
     // OK since this should never happen in normal operation. (It
     // would happen if the Meteor Accounts server mode somewhere else
@@ -221,15 +227,17 @@ var logOutSession = function (session) {
   delete session.registrationUrl;
 
   if (_.has(session, 'token')) {
-    if (! (session.pendingRevoke instanceof Array))
+    if (! (session.pendingRevoke instanceof Array)) {
       session.pendingRevoke = [];
+    }
 
     // Delete the auth token itself, but save the tokenId, which is
     // useless for authentication. The next time we're online, we'll
     // send the tokenId to the server to revoke the token on the
     // server side too.
-    if (typeof session.tokenId === "string")
+    if (typeof session.tokenId === "string") {
       session.pendingRevoke.push(session.tokenId);
+    }
     delete session.token;
     delete session.tokenId;
   }
@@ -253,8 +261,9 @@ var removePendingRevoke = function (domain, tokenIds) {
   var data = readSessionData();
   var session = getSession(data, domain);
   session.pendingRevoke = _.difference(session.pendingRevoke, tokenIds);
-  if (! session.pendingRevoke.length)
+  if (! session.pendingRevoke.length) {
     delete session.pendingRevoke;
+  }
   writeSessionData(data);
 };
 
@@ -279,8 +288,9 @@ var tryRevokeOldTokens = function (options) {
   var domainsWithRevokedTokens = [];
   _.each(readSessionData().sessions || {}, function (session, domain) {
     if (session.pendingRevoke &&
-        session.pendingRevoke.length)
+        session.pendingRevoke.length) {
       domainsWithRevokedTokens.push(domain);
+    }
   });
 
   var logoutFailWarning = function (domain) {
@@ -298,8 +308,9 @@ var tryRevokeOldTokens = function (options) {
     var data = readSessionData();
     var session = data.sessions[domain] || {};
     var tokenIds = session.pendingRevoke || [];
-    if (! tokenIds.length)
+    if (! tokenIds.length) {
       return;
+    }
 
     var url;
 
@@ -439,12 +450,13 @@ var oauthFlow = function (conn, options) {
 var doInteractivePasswordLogin = function (options) {
   var loginData = {};
 
-  if (_.has(options, 'username'))
+  if (_.has(options, 'username')) {
     loginData.username = options.username;
-  else if (_.has(options, 'email'))
+  } else if (_.has(options, 'email')) {
     loginData.email = options.email;
-  else
+  } else {
     throw new Error("Need username or email");
+  }
 
   var loginFailed = function () {
     if (! options.suppressErrorMessage) {
@@ -455,8 +467,9 @@ var doInteractivePasswordLogin = function (options) {
   var conn = options.connection || openAccountsConnection();
 
   var maybeCloseConnection = function () {
-    if (! options.connection)
+    if (! options.connection) {
       conn.close();
+    }
   };
 
   while (true) {
@@ -573,12 +586,13 @@ exports.logoutCommand = function (options) {
 
   tryRevokeOldTokens({ firstTry: true });
 
-  if (wasLoggedIn)
+  if (wasLoggedIn) {
     Console.error("Logged out.");
-  else
+  } else {
     // We called logOutAllSessions/writeSessionData anyway, out of an
     // abundance of caution.
     Console.error("Not logged in.");
+  }
 };
 
 // If this is fully set up account (with a username and password), or
@@ -592,16 +606,18 @@ exports.logoutCommand = function (options) {
 //    credentials). Defaults to false.
 var alreadyPolledForRegistration = false;
 exports.pollForRegistrationCompletion = function (options) {
-  if (alreadyPolledForRegistration)
+  if (alreadyPolledForRegistration) {
     return;
+  }
   alreadyPolledForRegistration = true;
 
   options = options || {};
 
   var data = readSessionData();
   var session = getSession(data, config.getAccountsDomain());
-  if (session.username || ! session.token)
+  if (session.username || ! session.token) {
     return;
+  }
 
   // We are logged in but we don't yet have a username. Ask the server
   // if a username was chosen since we last checked.
@@ -622,8 +638,9 @@ exports.pollForRegistrationCompletion = function (options) {
   }
 
   connection.call('getUsername', function (err, result) {
-    if (fut.isResolved())
+    if (fut.isResolved()) {
       return;
+    }
 
     if (err) {
       // If anything went wrong, return null just as we would have if
@@ -762,8 +779,9 @@ exports.registerOrLogIn = withAccountsConnection(function (connection) {
       );
     } catch (e) {
       stopSpinner();
-      if (e.errorType !== "Meteor.Error")
+      if (e.errorType !== "Meteor.Error") {
         throw e;
+      }
       Console.error(
         "When you've picked your password, run " +
         Console.command("'meteor login'") + " to log in.");
@@ -807,8 +825,9 @@ exports.maybePrintRegistrationLink = function (options) {
   var session = getSession(data, config.getAccountsDomain());
 
   if (session.userId && ! session.username && session.registrationUrl) {
-    if (options.leadingNewline)
+    if (options.leadingNewline) {
       Console.error();
+    }
     if (options.onlyAllowIfRegistered) {
       // A stronger message: we're going to not allow whatever they were trying
       // to do!

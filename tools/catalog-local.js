@@ -97,8 +97,9 @@ _.extend(LocalCatalog.prototype, {
   _requireInitialized: function () {
     var self = this;
 
-    if (! self.initialized)
+    if (! self.initialized) {
       throw new Error("catalog not initialized yet?");
+    }
   },
 
   // Return an array with the names of all of the packages that we know about,
@@ -130,8 +131,9 @@ _.extend(LocalCatalog.prototype, {
     self._requireInitialized();
     options = options || {};
 
-    if (!_.has(self.packages, name))
+    if (!_.has(self.packages, name)) {
       return null;
+    }
     return self.packages[name].packageRecord;
   },
 
@@ -141,8 +143,9 @@ _.extend(LocalCatalog.prototype, {
     var self = this;
     self._requireInitialized();
 
-    if (!_.has(self.packages, name))
+    if (!_.has(self.packages, name)) {
       return [];
+    }
     return [self.packages[name].versionRecord.version];
   },
 
@@ -152,8 +155,9 @@ _.extend(LocalCatalog.prototype, {
     var self = this;
     self._requireInitialized();
 
-    if (!_.has(self.packages, name))
+    if (!_.has(self.packages, name)) {
       return [];
+    }
     return [self.packages[name].versionRecord];
   },
 
@@ -163,11 +167,13 @@ _.extend(LocalCatalog.prototype, {
     var self = this;
     self._requireInitialized();
 
-    if (!_.has(self.packages, name))
+    if (!_.has(self.packages, name)) {
       return null;
+    }
     var versionRecord = self.packages[name].versionRecord;
-    if (versionRecord.version !== version)
+    if (versionRecord.version !== version) {
       return null;
+    }
     return versionRecord;
   },
 
@@ -176,8 +182,9 @@ _.extend(LocalCatalog.prototype, {
   getLatestVersion: function (name) {
     var self = this;
 
-    if (!_.has(self.packages, name))
+    if (!_.has(self.packages, name)) {
       return null;
+    }
     return self.packages[name].versionRecord;
   },
 
@@ -186,8 +193,9 @@ _.extend(LocalCatalog.prototype, {
     var packageObj = _.find(self.packages, function (p) {
       return p.packageSource.sourceRoot === sourceRoot;
     });
-    if (! packageObj)
+    if (! packageObj) {
       return null;
+    }
     return packageObj.versionRecord;
   },
 
@@ -221,8 +229,9 @@ _.extend(LocalCatalog.prototype, {
             include: [/\/$/]
           });
         // Not a directory? Ignore.
-        if (possiblePackageDirs === null)
+        if (possiblePackageDirs === null) {
           return;
+        }
 
         _.each(possiblePackageDirs, function (subdir) {
           // readAndWatchDirectory adds a slash to the end of directory names to
@@ -280,8 +289,9 @@ _.extend(LocalCatalog.prototype, {
           initFromPackageDirOptions.name = definiteName;
         }
         packageSource.initFromPackageDir(packageDir, initFromPackageDirOptions);
-        if (buildmessage.jobHasMessages())
-          return;  // recover by ignoring
+        if (buildmessage.jobHasMessages()) {
+          return;
+        }  // recover by ignoring
 
         // Now that we have initialized the package from package.js, we know its
         // name.
@@ -290,8 +300,9 @@ _.extend(LocalCatalog.prototype, {
         // We should only have one package dir for each name; in this case, we
         // are going to take the first one we get (since we preserved the order
         // in which we loaded local package dirs when running this function.)
-        if (_.has(self.packages, name))
+        if (_.has(self.packages, name)) {
           return;
+        }
 
         self.packages[name] = {
           packageSource: packageSource,
@@ -343,8 +354,9 @@ _.extend(LocalCatalog.prototype, {
 
   getPackageSource: function (name) {
     var self = this;
-    if (! _.has(self.packages, name))
+    if (! _.has(self.packages, name)) {
       return null;
+    }
     return self.packages[name].packageSource;
   }
 });

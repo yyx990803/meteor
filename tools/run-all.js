@@ -25,8 +25,9 @@ var Runner = function (options) {
   var self = this;
   self.projectContext = options.projectContext;
 
-  if (! _.has(options, 'proxyPort'))
+  if (! _.has(options, 'proxyPort')) {
     throw new Error("no proxyPort?");
+  }
 
   var listenPort = options.proxyPort;
   var mongoPort = parseInt(listenPort) + 1;
@@ -121,7 +122,9 @@ _.extend(Runner.prototype, {
     var allRunners = [ ] ;
     allRunners = allRunners.concat(self.extraRunners);
     _.each(allRunners, function (runner) {
-      if (!runner) return;
+      if (!runner) {
+        return;
+      }
       runner.prestart && runner.prestart();
     });
 
@@ -153,8 +156,9 @@ _.extend(Runner.prototype, {
         buildmessage.enterJob({ title: "starting " + title }, function () {
           extraRunner.start();
         });
-        if (! self.quiet && ! self.stopped)
+        if (! self.quiet && ! self.stopped) {
           runLog.log("Started " + title + ".",  { arrow: true });
+        }
       }
     });
 
@@ -162,8 +166,9 @@ _.extend(Runner.prototype, {
       buildmessage.enterJob({ title: "starting your app" }, function () {
         self.appRunner.start();
       });
-      if (! self.quiet && ! self.stopped)
+      if (! self.quiet && ! self.stopped) {
         runLog.log("Started your app.",  { arrow: true });
+      }
     }
 
     if (! self.stopped && ! self.quiet) {
@@ -180,8 +185,9 @@ _.extend(Runner.prototype, {
       buildmessage.enterJob({ title: "starting Selenium" }, function () {
         self.selenium.start();
       });
-      if (! self.quiet && ! self.stopped)
+      if (! self.quiet && ! self.stopped) {
         runLog.log("Started Selenium.", { arrow: true });
+      }
     }
 
     // XXX It'd be nice to (cosmetically) handle failure better. Right
@@ -211,8 +217,9 @@ _.extend(Runner.prototype, {
   // Idempotent
   stop: function () {
     var self = this;
-    if (self.stopped)
+    if (self.stopped) {
       return;
+    }
 
     self.stopped = true;
     self.proxy.stop();
@@ -241,10 +248,12 @@ _.extend(Runner.prototype, {
     } else {
       self.appPort = require('./utils.js').randomPort();
     }
-    if (self.proxy)
+    if (self.proxy) {
       self.proxy.proxyToPort = self.appPort;
-    if (self.appRunner)
+    }
+    if (self.appRunner) {
       self.appRunner.port = self.appPort;
+    }
   }
 });
 
@@ -356,10 +365,11 @@ exports.run = function (options) {
   }
 
   if (result.outcome === "wrong-release") {
-    if (once)
+    if (once) {
       // We lost a race where the user ran 'meteor update' and 'meteor
       // run --once' simultaneously.
       throw new Error("wrong release?");
+    }
 
     // If the user did not specify a --release on the command line,
     // and simultaneously runs `meteor update` during this run, just

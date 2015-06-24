@@ -73,8 +73,9 @@ var expectThrows = markStack(function (f) {
     threw = true;
   }
 
-  if (! threw)
+  if (! threw) {
     throw new TestFailure("expected-exception");
+  }
 });
 
 // Execute a command synchronously, discarding stderr.
@@ -115,12 +116,14 @@ var ROOT_PACKAGES_TO_BUILD_IN_SANDBOX = [
 ];
 
 var setUpBuiltPackageTropohouse = function () {
-  if (builtPackageTropohouseDir)
+  if (builtPackageTropohouseDir) {
     return;
+  }
   builtPackageTropohouseDir = files.mkdtemp('built-package-tropohouse');
 
-  if (config.getPackagesDirectoryName() !== 'packages')
+  if (config.getPackagesDirectoryName() !== 'packages') {
     throw Error("running self-test with METEOR_PACKAGE_SERVER_URL set?");
+  }
 
   var tropohouse = new tropohouseModule.Tropohouse(builtPackageTropohouseDir);
   tropohouseLocalCatalog = newSelfTestCatalog();
@@ -159,8 +162,9 @@ var setUpBuiltPackageTropohouse = function () {
 };
 
 var newSelfTestCatalog = function () {
-  if (! files.inCheckout())
+  if (! files.inCheckout()) {
     throw Error("Only can build packages from a checkout");
+  }
 
   var catalogLocal = require('./catalog-local.js');
   var selfTestCatalog = new catalogLocal.LocalCatalog;
@@ -212,8 +216,9 @@ _.extend(Matcher.prototype, {
 
   match: function (pattern, timeout, strict) {
     var self = this;
-    if (self.matchFuture)
+    if (self.matchFuture) {
       throw new Error("already have a match pending?");
+    }
     self.matchPattern = pattern;
     self.matchStrict = strict;
     var f = self.matchFuture = new Future;
@@ -232,8 +237,9 @@ _.extend(Matcher.prototype, {
     try {
       return f.wait();
     } finally {
-      if (timer)
+      if (timer) {
         clearTimeout(timer);
+      }
     }
   },
 
@@ -256,8 +262,9 @@ _.extend(Matcher.prototype, {
     var self = this;
 
     var f = self.matchFuture;
-    if (! f)
+    if (! f) {
       return;
+    }
 
     var ret = null;
 
@@ -342,8 +349,9 @@ _.extend(OutputLog.prototype, {
   write: function (channel, text) {
     var self = this;
 
-    if (! _.has(self.buffers, 'channel'))
+    if (! _.has(self.buffers, 'channel')) {
       self.buffers[channel] = { text: '', offset: 0};
+    }
     var b = self.buffers[channel];
 
     while (text.length) {
@@ -391,13 +399,15 @@ _.extend(OutputLog.prototype, {
   forbid: function (pattern, channel) {
     var self = this;
     _.each(self.lines, function (line) {
-      if (channel && channel !== line.channel)
+      if (channel && channel !== line.channel) {
         return;
+      }
 
       var match = (pattern instanceof RegExp) ?
         (line.text.match(pattern)) : (line.text.indexOf(pattern) !== -1);
-      if (match)
+      if (match) {
         throw new TestFailure('forbidden-string-present', { run: self.run });
+      }
     });
   },
 
@@ -491,8 +501,9 @@ var Sandbox = function (options) {
   }
 
   if (_.has(options, 'warehouse')) {
-    if (!files.inCheckout())
+    if (!files.inCheckout()) {
       throw Error("make only use a fake warehouse in a checkout");
+    }
     self.warehouse = files.pathJoin(self.root, 'tropohouse');
     self._makeWarehouse(options.warehouse);
   }
@@ -529,10 +540,11 @@ var Sandbox = function (options) {
   var meteorScript = process.platform === "win32" ? "meteor.bat" : "meteor";
 
   // Figure out the 'meteor' to run
-  if (self.warehouse)
+  if (self.warehouse) {
     self.execPath = files.pathJoin(self.warehouse, meteorScript);
-  else
+  } else {
     self.execPath = files.pathJoin(files.getCurrentToolsDir(), meteorScript);
+  }
 };
 
 _.extend(Sandbox.prototype, {
@@ -603,8 +615,9 @@ _.extend(Sandbox.prototype, {
       self.write(files.pathJoin(to, '.meteor/release'), release.current.name);
     }
 
-    if (options.dontPrepareApp)
+    if (options.dontPrepareApp) {
       return;
+    }
 
     // Prepare the app (ie, build or download packages). We give this a nice
     // long timeout, which allows the next command to not need a bloated
@@ -698,10 +711,11 @@ _.extend(Sandbox.prototype, {
   read: function (filename) {
     var self = this;
     var file = files.pathJoin(self.cwd, filename);
-    if (!files.exists(file))
+    if (!files.exists(file)) {
       return null;
-    else
+    } else {
       return files.readFile(files.pathJoin(self.cwd, filename), 'utf8');
+    }
   },
 
   // Copy the contents of one file to another.  In these series of tests, we often
@@ -770,8 +784,9 @@ _.extend(Sandbox.prototype, {
     // By default (ie, with no mock warehouse and no --release arg) we should be
     // testing the actual release this is built in, so we pretend that it is the
     // latest release.
-    if (!self.warehouse && release.current.isProperRelease())
+    if (!self.warehouse && release.current.isProperRelease()) {
       env.METEOR_TEST_LATEST_RELEASE = release.current.name;
+    }
     return env;
   },
 
@@ -812,13 +827,15 @@ _.extend(Sandbox.prototype, {
 
     tropohouseIsopackCache.eachBuiltIsopack(function (packageName, isopack) {
       var packageRec = tropohouseLocalCatalog.getPackage(packageName);
-      if (! packageRec)
+      if (! packageRec) {
         throw Error("no package record for " + packageName);
+      }
       stubCatalog.collections.packages.push(packageRec);
 
       var versionRec = tropohouseLocalCatalog.getLatestVersion(packageName);
-      if (! versionRec)
+      if (! versionRec) {
         throw Error("no version record for " + packageName);
+      }
       stubCatalog.collections.versions.push(versionRec);
 
       stubCatalog.collections.builds.push({
@@ -834,8 +851,9 @@ _.extend(Sandbox.prototype, {
       }
     });
 
-    if (! toolPackageVersion)
+    if (! toolPackageVersion) {
       throw Error("no meteor-tool?");
+    }
 
     stubCatalog.collections.releaseTracks.push({
       name: catalog.DEFAULT_TRACK,
@@ -959,11 +977,13 @@ _.extend(BrowserStackClient.prototype, {
     var self = this;
 
     // memoize the key
-    if (browserStackKey === null)
+    if (browserStackKey === null) {
       browserStackKey = self._getBrowserStackKey();
-    if (! browserStackKey)
+    }
+    if (! browserStackKey) {
       throw new Error("BrowserStack key not found. Ensure that you " +
         "have installed your S3 credentials.");
+    }
 
     var capabilities = {
       'browserName' : self.browserName,
@@ -977,8 +997,9 @@ _.extend(BrowserStackClient.prototype, {
     }
 
     self._launchBrowserStackTunnel(function (error) {
-      if (error)
+      if (error) {
         throw error;
+      }
 
       self.driver = new webdriver.Builder().
         usingServer('http://hub.browserstack.com/wd/hub').
@@ -1034,8 +1055,9 @@ _.extend(BrowserStackClient.prototype, {
 
     // Called when the SSH tunnel is established.
     self.tunnelProcess.stdout.on('data', function(data) {
-      if (data.toString().match(/You can now access your local server/))
+      if (data.toString().match(/You can now access your local server/)) {
         callback();
+      }
     });
   }
 });
@@ -1103,8 +1125,9 @@ _.extend(Run.prototype, {
   args: function (...args) {
     var self = this;
 
-    if (self.proc)
+    if (self.proc) {
       throw new Error("already started?");
+    }
 
     _.each(args, function (a) {
       if (typeof a !== "object") {
@@ -1120,8 +1143,9 @@ _.extend(Run.prototype, {
 
   connectClient: function () {
     var self = this;
-    if (! self.client)
+    if (! self.client) {
       throw new Error("Must create Run with a client to use connectClient().");
+    }
 
     self._ensureStarted();
     self.client.connect();
@@ -1130,8 +1154,9 @@ _.extend(Run.prototype, {
   _exited: function (status) {
     var self = this;
 
-    if (self.exitStatus !== undefined)
+    if (self.exitStatus !== undefined) {
       throw new Error("already exited?");
+    }
 
     self.client && self.client.stop();
 
@@ -1149,8 +1174,9 @@ _.extend(Run.prototype, {
   _ensureStarted: function () {
     var self = this;
 
-    if (self.proc)
+    if (self.proc) {
       return;
+    }
 
     var env = _.clone(process.env);
     _.extend(env, self.env);
@@ -1162,18 +1188,21 @@ _.extend(Run.prototype, {
       });
 
     self.proc.on('close', function (code, signal) {
-      if (self.exitStatus === undefined)
+      if (self.exitStatus === undefined) {
         self._exited({ code: code, signal: signal });
+      }
     });
 
     self.proc.on('exit', function (code, signal) {
-      if (self.exitStatus === undefined)
+      if (self.exitStatus === undefined) {
         self._exited({ code: code, signal: signal });
+      }
     });
 
     self.proc.on('error', function (err) {
-      if (self.exitStatus === undefined)
+      if (self.exitStatus === undefined) {
         self._exited(null);
+      }
     });
 
     self.proc.stdout.setEncoding('utf8');
@@ -1299,8 +1328,9 @@ _.extend(Run.prototype, {
       }
     }
 
-    if (! self.exitStatus)
+    if (! self.exitStatus) {
       throw new TestFailure('spawn-failure', { run: self });
+    }
     if (code !== undefined && self.exitStatus.code !== code) {
       throw new TestFailure('wrong-exit-code', {
         expected: { code: code },
@@ -1345,8 +1375,9 @@ _.extend(Run.prototype, {
 
   // Kills the running process and it's child processes
   _killProcess: function () {
-    if (!this.proc)
+    if (!this.proc) {
       throw new Error("Unexpected: `this.proc` undefined when calling _killProcess");
+    }
 
     if (process.platform === "win32") {
       // looks like in Windows `self.proc.kill()` doesn't kill child
@@ -1369,8 +1400,9 @@ _.extend(Run.prototype, {
   tellMongo: markStack(function (command) {
     var self = this;
 
-    if (! self.fakeMongoPort)
+    if (! self.fakeMongoPort) {
       throw new Error("fakeMongo option on sandbox must be set");
+    }
 
     self._ensureStarted();
 
@@ -1398,29 +1430,34 @@ _.extend(Run.prototype, {
         (function () {
           var fut = new Future;
           var conn = net.connect(self.fakeMongoPort, function () {
-            if (fut)
+            if (fut) {
               fut['return'](true);
+            }
           });
           conn.setNoDelay();
           conn.on('error', function () {
-            if (fut)
+            if (fut) {
               fut['return'](false);
+            }
           });
           setTimeout(function () {
-            if (fut)
-              fut['return'](false); // 100ms connection timeout
+            if (fut) {
+              fut['return'](false);
+            } // 100ms connection timeout
           }, 100);
 
           // This is all arranged so that if a previous attempt
           // belatedly succeeds, somehow, we ignore it.
-          if (fut.wait())
+          if (fut.wait()) {
             self.fakeMongoConnection = conn;
+          }
           fut = null;
         })();
       }
 
-      if (! self.fakeMongoConnection)
+      if (! self.fakeMongoConnection) {
         throw new TestFailure("mongo-not-running", { run: self });
+      }
     }
 
     self.fakeMongoConnection.write(JSON.stringify(command) + "\n");
@@ -1466,8 +1503,9 @@ var fileBeingLoaded = null;
 var fileBeingLoadedHash = null;
 var runningTest = null;
 var getAllTests = function () {
-  if (allTests)
+  if (allTests) {
     return allTests;
+  }
   allTests = [];
 
   // Load all files in the 'tests' directory that end in .js. They
@@ -1475,11 +1513,14 @@ var getAllTests = function () {
   var testdir = files.pathJoin(__dirname, 'tests');
   var filenames = files.readdir(testdir);
   _.each(filenames, function (n) {
-    if (! n.match(/^[^.].*\.js$/)) // ends in '.js', doesn't start with '.'
+    if (// ends in '.js', doesn't start with '.'
+    ! n.match(/^[^.].*\.js$/)) {
       return;
+    }
     try {
-      if (fileBeingLoaded)
+      if (fileBeingLoaded) {
         throw new Error("called recursively?");
+      }
       fileBeingLoaded = files.pathBasename(n, '.js');
 
       var fullPath = files.pathJoin(testdir, n);
@@ -1707,10 +1748,12 @@ var getTestStateFilePath = function () {
 var readTestState = function () {
   var testStateFile = getTestStateFilePath();
   var testState;
-  if (files.exists(testStateFile))
+  if (files.exists(testStateFile)) {
     testState = JSON.parse(files.readFile(testStateFile, 'utf8'));
-  if (! testState || testState.version !== 1)
+  }
+  if (! testState || testState.version !== 1) {
     testState = { version: 1, lastPassedHashes: {} };
+  }
   return testState;
 };
 
@@ -1843,8 +1886,9 @@ var runTests = function (options) {
 
   testList.saveTestState();
 
-  if (totalRun > 0)
+  if (totalRun > 0) {
     Console.error();
+  }
 
   Console.error(testList.generateSkipReport());
 
@@ -1853,8 +1897,9 @@ var runTests = function (options) {
     return 0;
   } else if (failedTests.length === 0) {
     var disclaimers = '';
-    if (testList.filteredTests.length < testList.allTests.length)
+    if (testList.filteredTests.length < testList.allTests.length) {
       disclaimers += " other";
+    }
     Console.error("All" + disclaimers + " tests passed.");
     return 0;
   } else {

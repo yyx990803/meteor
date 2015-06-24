@@ -67,8 +67,9 @@ var findUpwards = function (predicate, startPath) {
       testDir = newDir;
     }
   }
-  if (!testDir)
+  if (!testDir) {
     return null;
+  }
 
   return testDir;
 };
@@ -124,7 +125,9 @@ files.addToGitignore = function (dirPath, entry) {
       // already there do nothing
     } else {
       // rewrite file w/ new entry.
-      if (data.substr(-1) !== "\n") data = data + "\n";
+      if (data.substr(-1) !== "\n") {
+        data = data + "\n";
+      }
       data = data + entry + "\n";
       files.writeFile(filepath, data, 'utf8');
     }
@@ -137,8 +140,9 @@ files.addToGitignore = function (dirPath, entry) {
 // Are we running Meteor from a git checkout?
 files.inCheckout = _.once(function () {
   try {
-    if (files.exists(files.pathJoin(files.getCurrentToolsDir(), '.git')))
+    if (files.exists(files.pathJoin(files.getCurrentToolsDir(), '.git'))) {
       return true;
+    }
   } catch (e) { console.log(e); }
 
   return false;
@@ -150,10 +154,11 @@ files.inCheckout = _.once(function () {
 files.usesWarehouse = function () {
   // Test hook: act like we're "installed" using a non-homedir warehouse
   // directory.
-  if (process.env.METEOR_WAREHOUSE_DIR)
+  if (process.env.METEOR_WAREHOUSE_DIR) {
     return true;
-  else
+  } else {
     return ! files.inCheckout();
+  }
 };
 
 // Read the '.tools_version.txt' file. If in a checkout, throw an error.
@@ -239,11 +244,13 @@ files.getSettings = function (filename, watchSet) {
 files.prettyPath = function (p) {
   p = files.realpath(p);
   var home = files.getHomeDir();
-  if (! home)
+  if (! home) {
     return p;
+  }
   var relativeToHome = files.pathRelative(home, p);
-  if (relativeToHome.substr(0, 3) === ('..' + files.pathSep))
+  if (relativeToHome.substr(0, 3) === ('..' + files.pathSep)) {
     return p;
+  }
   return files.pathJoin('~', relativeToHome);
 };
 
@@ -252,8 +259,9 @@ files.statOrNull = function (path) {
   try {
     return files.stat(path);
   } catch (e) {
-    if (e.code == "ENOENT")
+    if (e.code == "ENOENT") {
       return null;
+    }
     throw e;
   }
 };
@@ -275,8 +283,9 @@ var makeTreeReadOnly = function (p) {
     // the l in lstat is critical -- we want to ignore symbolic links
     var stat = files.lstat(p);
   } catch (e) {
-    if (e.code == "ENOENT")
+    if (e.code == "ENOENT") {
       return;
+    }
     throw e;
   }
 
@@ -288,8 +297,9 @@ var makeTreeReadOnly = function (p) {
   if (stat.isFile()) {
     var permissions = stat.mode & 0o777;
     var readOnlyPermissions = permissions & 0o555;
-    if (permissions !== readOnlyPermissions)
+    if (permissions !== readOnlyPermissions) {
       files.chmod(p, readOnlyPermissions);
+    }
   }
 };
 
@@ -442,11 +452,14 @@ files.cp_r = function (from, to, options) {
   _.each(files.readdir(from), function (f) {
     if (_.any(options.ignore || [], function (pattern) {
       return f.match(pattern);
-    })) return;
+    })) {
+      return;
+    }
 
     var fullFrom = files.pathJoin(from, f);
-    if (options.transformFilename)
+    if (options.transformFilename) {
       f = options.transformFilename(f);
+    }
     var fullTo = files.pathJoin(to, f);
     var stats = options.preserveSymlinks
           ? files.lstat(fullFrom) : files.stat(fullFrom);
@@ -588,11 +601,13 @@ files.mkdtemp = function (prefix) {
       return process.env[t];
     }).filter(_.identity));
 
-    if (! tmpDir && process.platform !== 'win32')
+    if (! tmpDir && process.platform !== 'win32') {
       tmpDir = '/tmp';
+    }
 
-    if (! tmpDir)
+    if (! tmpDir) {
       throw new Error("Couldn't create a temporary directory.");
+    }
 
     tmpDir = files.realpath(tmpDir);
 
@@ -619,10 +634,12 @@ files.mkdtemp = function (prefix) {
 // Call this if you're done using a temporary directory. It will asynchronously
 // be deleted.
 files.freeTempDir = function (tempDir) {
-  if (! _.contains(tempDirs, tempDir))
+  if (! _.contains(tempDirs, tempDir)) {
     throw Error("not a tracked temp dir: " + tempDir);
-  if (process.env.METEOR_SAVE_TMPDIRS)
+  }
+  if (process.env.METEOR_SAVE_TMPDIRS) {
     return;
+  }
   setImmediate(function () {
     // note: rm_recursive can yield, so it's possible that during this
     // rm_recursive call, the onExit rm_recursive fires too.  (Or it could even
@@ -707,9 +724,10 @@ files.extractTarGz = function (buffer, destPath, options) {
 
   // succeed!
   var topLevelOfArchive = files.readdir(tempDir);
-  if (topLevelOfArchive.length !== 1)
+  if (topLevelOfArchive.length !== 1) {
     throw new Error(
       "Extracted archive '" + tempDir + "' should only contain one entry");
+  }
 
   var extractDir = files.pathJoin(tempDir, topLevelOfArchive[0]);
   makeTreeReadOnly(extractDir);
@@ -807,8 +825,9 @@ files.renameDirAlmostAtomically = function (fromDir, toDir) {
   try {
     files.rename(toDir, garbageDir);
   } catch (e) {
-    if (e.code !== 'ENOENT')
+    if (e.code !== 'ENOENT') {
       throw e;
+    }
     movedOldDir = false;
   }
 
@@ -816,8 +835,9 @@ files.renameDirAlmostAtomically = function (fromDir, toDir) {
   files.rename(fromDir, toDir);
 
   // ... and delete the old one.
-  if (movedOldDir)
+  if (movedOldDir) {
     files.rm_recursive(garbageDir);
+  }
 };
 
 files.writeFileAtomically = function (filename, contents) {
@@ -904,8 +924,9 @@ files.runGitInCheckout = function (...args) {
 // underlying V8 issue is:
 //   https://code.google.com/p/v8/issues/detail?id=1281
 files.runJavaScript = function (code, options) {
-  if (typeof code !== 'string')
+  if (typeof code !== 'string') {
     throw new Error("code must be a string");
+  }
 
   options = options || {};
   var filename = options.filename || "<anonymous>";
@@ -971,8 +992,9 @@ files.runJavaScript = function (code, options) {
     // stderr (which we don't).
     var script = require('vm').createScript(wrapped, stackFilename);
   } catch (nodeParseError) {
-    if (!(nodeParseError instanceof SyntaxError))
+    if (!(nodeParseError instanceof SyntaxError)) {
       throw nodeParseError;
+    }
     // Got a parse error. Unfortunately, we can't actually get the
     // location of the parse error from the SyntaxError; Node has some
     // hacky support for displaying it over stderr if you pass an
@@ -1054,8 +1076,9 @@ files.readdirNoDots = function (path) {
   try {
     var entries = files.readdir(path);
   } catch (e) {
-    if (e.code === 'ENOENT')
+    if (e.code === 'ENOENT') {
       return [];
+    }
     throw e;
   }
   return _.filter(entries, function (entry) {
@@ -1073,8 +1096,9 @@ var getLines = function (file) {
   // strip blank lines at the end
   while (lines.length) {
     var line = lines[lines.length - 1];
-    if (line.match(/\S/))
+    if (line.match(/\S/)) {
       break;
+    }
     lines.pop();
   }
 
@@ -1092,8 +1116,9 @@ exports.getLinesOrEmpty = function (file) {
   try {
     return getLines(file);
   } catch (e) {
-    if (e && e.code === 'ENOENT')
+    if (e && e.code === 'ENOENT') {
       return [];
+    }
     throw e;
   }
 };
@@ -1104,8 +1129,9 @@ exports.readJSONOrNull = function (file) {
   try {
     var raw = files.readFile(file, 'utf8');
   } catch (e) {
-    if (e && e.code === 'ENOENT')
+    if (e && e.code === 'ENOENT') {
       return null;
+    }
     throw e;
   }
   return JSON.parse(raw);
@@ -1114,8 +1140,9 @@ exports.readJSONOrNull = function (file) {
 // Trims whitespace & other filler characters of a line in a project file.
 files.trimSpaceAndComments = function (line) {
   var match = line.match(/^([^#]*)#/);
-  if (match)
+  if (match) {
     line = match[1];
+  }
   return files.trimSpace(line);
 };
 
@@ -1383,8 +1410,9 @@ if (process.platform === "win32") {
         rename(from, to);
         success = true;
       } catch (err) {
-        if (err.code !== 'EPERM')
+        if (err.code !== 'EPERM') {
           throw err;
+        }
       }
     }
     if (! success) {

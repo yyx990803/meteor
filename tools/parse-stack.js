@@ -22,8 +22,9 @@ exports.parse = function (err) {
   var ret = [];
 
   _.each(frames, function (frame) {
-    if (stop)
+    if (stop) {
       return;
+    }
     var m;
     if (m =
         frame.match(/^\s*at\s*((new )?.+?)\s*(\[as\s*([^\]]*)\]\s*)?\((.*?)(:(\d+))?(:(\d+))?\)\s*$/)) {

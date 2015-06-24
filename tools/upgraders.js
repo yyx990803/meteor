@@ -18,8 +18,9 @@ var Console = require('./console.js').Console;
 
 var printedNoticeHeaderThisProcess = false;
 var maybePrintNoticeHeader = function () {
-  if (printedNoticeHeaderThisProcess)
+  if (printedNoticeHeaderThisProcess) {
     return;
+  }
   console.log();
   console.log("-- Notice --");
   console.log();
@@ -95,8 +96,9 @@ var upgradersByName = {
       var oldPlatformsFile = files.readFile(oldPlatformsPath);
     } catch (e) {
       // If the file doesn't exist, there's no transition to do.
-      if (e && e.code === 'ENOENT')
+      if (e && e.code === 'ENOENT') {
         return;
+      }
       throw e;
     }
     var oldPlatforms = _.compact(_.map(
@@ -143,8 +145,9 @@ exports.runUpgrader = function (projectContext, upgraderName) {
   // This should only be called from the hidden run-upgrader command or by
   // "meteor update" with an upgrader from one of our releases, so it's OK if
   // error handling is just an exception.
-  if (! _.has(upgradersByName, upgraderName))
+  if (! _.has(upgradersByName, upgraderName)) {
     throw new Error("Unknown upgrader: " + upgraderName);
+  }
   upgradersByName[upgraderName](projectContext);
 };
 
