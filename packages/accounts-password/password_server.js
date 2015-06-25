@@ -78,7 +78,7 @@ var checkPassword = Accounts._checkPassword;
 ///
 
 // Attempts to find a user from a user query, treating username and email as case insensitive
-var findUserFromUserQuery = function (query) {
+var findUserFromQuery = function (query) {
   var user;
   
   if (query.id) {
@@ -106,9 +106,6 @@ var findUserFromUserQuery = function (query) {
       }
     }
   }
-  
-  if (!user)
-    throw new Meteor.Error(403, "User not found");
 
   return user;
 };
@@ -196,7 +193,9 @@ Accounts.registerLoginHandler("password", function (options) {
   });
 
 
-  var user = findUserFromUserQuery(options.user);
+  var user = findUserFromQuery(options.user);
+  if (!user)
+    throw new Meteor.Error(403, "User not found");
 
   if (!user.services || !user.services.password ||
       !(user.services.password.bcrypt || user.services.password.srp))
@@ -260,7 +259,9 @@ Accounts.registerLoginHandler("password", function (options) {
     password: passwordValidator
   });
 
-  var user = findUserFromUserQuery(options.user);
+  var user = findUserFromQuery(options.user);
+  if (!user)
+    throw new Meteor.Error(403, "User not found");
 
   // Check to see if another simultaneous login has already upgraded
   // the user record to bcrypt.
@@ -752,6 +753,18 @@ var createUser = function (options) {
   var email = options.email;
   if (!username && !email)
     throw new Meteor.Error(400, "Need to set a username or email");
+  
+  if (!options._skipCaseInsensitiveChecks) {
+    // Perform a case insensitive check for a user with the same username
+    if (username && findUserFromQuery({username: username})) {
+      throw new Meteor.Error(403, "Username already exists.");
+    }
+    
+    // Perform a case insensitive check for a user with the same email
+    if (email && findUserFromQuery({email: email})) {
+      throw new Meteor.Error(403, "Email already exists.");
+    }
+  }
 
   var user = {services: {}};
   if (options.password) {

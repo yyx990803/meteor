@@ -31,11 +31,14 @@ if (Meteor.isClient) (function () {
       test.equal(Meteor.user().username, someUsername);
     });
   };
-  var expectUserNotFound = function (test, expect) {
-    return expect(function (error) {
-      test.equal(error && error.error, 403);
-      test.equal(error && error.reason, "User not found");
+  var expectError = function (expectedError, test, expect) {
+    return expect(function (actualError) {
+      test.equal(actualError && actualError.error, expectedError.error);
+      test.equal(actualError && actualError.reason, expectedError.reason);
     });
+  };
+  var expectUserNotFound = function (test, expect) {
+    return expectError(new Meteor.Error(403, "User not found"), test, expect);
   };
   var waitForLoggedOutStep = function (test, expect) {
     pollUntil(expect, function () {
@@ -198,11 +201,10 @@ if (Meteor.isClient) (function () {
     function (test, expect) {
       var username = 'Adalovelace' + this.randomSuffix;
       Accounts.createUser(
-        {username: username, password: this.password},
+        {username: username, password: this.password, _skipCaseInsensitiveChecks: true},
         loggedInAs(username, test, expect));
     },
-    logoutStep,
-    // Check if we can log in with the username in lower case
+    // We shouldn't be able to log in with the username in lower case
     function(test, expect) {
       Meteor.loginWithPassword({username: "adalovelace" + this.randomSuffix}, this.password, 
                                expectUserNotFound(test, expect));
@@ -211,6 +213,26 @@ if (Meteor.isClient) (function () {
     function(test, expect) {
       Meteor.loginWithPassword({username: this.username}, this.password, 
                                loggedInAs(this.username, test, expect));
+    }
+  ]);
+  
+  testAsyncMulti("passwords - creating users with the same case insensitive username", [
+    function (test, expect) {
+      this.randomSuffix = Random.id(2);
+      this.username = 'AdaLovelace' + this.randomSuffix;
+      this.password = 'password';
+
+      Accounts.createUser(
+        {username: this.username, password: this.password},
+        loggedInAs(this.username, test, expect));
+    },
+    logoutStep,
+    // Attempt to create another user with a username that only differs in case
+    function(test, expect) {
+      var username = 'adalovelace' + this.randomSuffix;
+      Accounts.createUser(
+        {username: username, password: this.password},
+        expectError(new Meteor.Error(403, "Username already exists."), test, expect));
     }
   ]);
   
@@ -249,7 +271,7 @@ if (Meteor.isClient) (function () {
       var username = 'AdaLovelace' + Random.id(2);
       var email =  "ADA@lovelace.com" + this.randomSuffix;
       Accounts.createUser(
-        {username: username, email: email, password: this.password},
+        {username: username, email: email, password: this.password, _skipCaseInsensitiveChecks: true},
         loggedInAs(username, test, expect));
     },
     logoutStep,
@@ -262,6 +284,27 @@ if (Meteor.isClient) (function () {
     function(test, expect) {
       Meteor.loginWithPassword({email: this.email}, this.password, 
                                loggedInAs(this.username, test, expect));
+    }
+  ]);
+  
+  testAsyncMulti("passwords - creating users with the same case insensitive email", [
+    function (test, expect) {
+      this.randomSuffix = Random.id(2);
+      this.username = 'AdaLovelace' + this.randomSuffix;
+      this.email =  "Ada@lovelace.com" + this.randomSuffix;
+      this.password = 'password';
+
+      Accounts.createUser(
+        {username: this.username, email: this.email, password: this.password},
+        loggedInAs(this.username, test, expect));
+    },
+    logoutStep,
+    // Attempt to create another user with an email that only differs in case
+    function(test, expect) {
+      var email =  "ada@lovelace.com" + this.randomSuffix;
+      Accounts.createUser(
+        {email: email, password: this.password},
+        expectError(new Meteor.Error(403, "Email already exists."), test, expect));
     }
   ]);
 
