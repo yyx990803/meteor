@@ -99,7 +99,11 @@ var findUserFromUserQuery = function (query) {
     // If user is not found, try a case insensitive lookup
     if (!user) {
       selector = selectorForFastCaseInsensitiveLookup(fieldName, string);
-      user = Meteor.users.findOne(selector);
+      var candidateUsers = Meteor.users.find(selector).fetch();
+      // No match if multiple candidates are found
+      if (candidateUsers.length == 1) {
+        user = candidateUsers[0];
+      }
     }
   }
   

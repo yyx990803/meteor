@@ -31,6 +31,12 @@ if (Meteor.isClient) (function () {
       test.equal(Meteor.user().username, someUsername);
     });
   };
+  var expectUserNotFound = function (test, expect) {
+    return expect(function (error) {
+      test.equal(error && error.error, 403);
+      test.equal(error && error.reason, "User not found");
+    });
+  };
   var waitForLoggedOutStep = function (test, expect) {
     pollUntil(expect, function () {
       return Meteor.userId() === null;
@@ -177,6 +183,37 @@ if (Meteor.isClient) (function () {
     }
   ]);
   
+  testAsyncMulti("passwords - logging in with case insensitive username when there are multiple matches", [
+    function (test, expect) {
+      this.randomSuffix = Random.id(2);
+      this.username = 'AdaLovelace' + this.randomSuffix;
+      this.email =  "Ada@lovelace.com" + this.randomSuffix;
+      this.password = 'password';
+
+      Accounts.createUser(
+        {username: this.username, email: this.email, password: this.password},
+        loggedInAs(this.username, test, expect));
+    },
+    logoutStep,
+    function (test, expect) {
+      var username = 'Adalovelace' + this.randomSuffix;
+      Accounts.createUser(
+        {username: username, password: this.password},
+        loggedInAs(username, test, expect));
+    },
+    logoutStep,
+    // Check if we can log in with the username in lower case
+    function(test, expect) {
+      Meteor.loginWithPassword({username: "adalovelace" + this.randomSuffix}, this.password, 
+                               expectUserNotFound(test, expect));
+    },
+    // Check if we can log in with the username in original case
+    function(test, expect) {
+      Meteor.loginWithPassword({username: this.username}, this.password, 
+                               loggedInAs(this.username, test, expect));
+    }
+  ]);
+  
   testAsyncMulti("passwords - logging in with case insensitive email", [
     function (test, expect) {
       this.randomSuffix = Random.id(2);
@@ -189,9 +226,41 @@ if (Meteor.isClient) (function () {
         loggedInAs(this.username, test, expect));
     },
     logoutStep,
-    // Check if we can log in with the email address in lower case
+    // Check if we can log in with the email in lower case
     function(test, expect) {
       Meteor.loginWithPassword({email: "ada@lovelace.com" + this.randomSuffix}, this.password, 
+                               loggedInAs(this.username, test, expect));
+    }
+  ]);
+  
+  testAsyncMulti("passwords - logging in with case insensitive email when there are multiple matches", [
+    function (test, expect) {
+      this.randomSuffix = Random.id(2);
+      this.username = 'AdaLovelace' + this.randomSuffix;
+      this.email =  "Ada@lovelace.com" + this.randomSuffix;
+      this.password = 'password';
+
+      Accounts.createUser(
+        {username: this.username, email: this.email, password: this.password},
+        loggedInAs(this.username, test, expect));
+    },
+    logoutStep,
+    function (test, expect) {
+      var username = 'AdaLovelace' + Random.id(2);
+      var email =  "ADA@lovelace.com" + this.randomSuffix;
+      Accounts.createUser(
+        {username: username, email: email, password: this.password},
+        loggedInAs(username, test, expect));
+    },
+    logoutStep,
+    // Check if we can log in with the email in lower case
+    function(test, expect) {
+      Meteor.loginWithPassword({email: "ada@lovelace.com" + this.randomSuffix}, this.password, 
+                               expectUserNotFound(test, expect));
+    },
+    // Check if we can log in with the email in original case
+    function(test, expect) {
+      Meteor.loginWithPassword({email: this.email}, this.password, 
                                loggedInAs(this.username, test, expect));
     }
   ]);
