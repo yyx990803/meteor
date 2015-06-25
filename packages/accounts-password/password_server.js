@@ -77,29 +77,74 @@ var checkPassword = Accounts._checkPassword;
 /// LOGIN
 ///
 
-// Users can specify various keys to identify themselves with.
-// @param user {Object} with one of `id`, `username`, or `email`.
-// @returns A selector to pass to mongo to get the user record.
-
-var selectorFromUserQuery = function (user) {
-  if (user.id)
-    return {_id: user.id};
-  else if (user.username)
-    return {username: user.username};
-  else if (user.email)
-    return {"emails.address": user.email};
-  throw new Error("shouldn't happen (validation missed something)");
-};
-
-var findUserFromUserQuery = function (user) {
-  var selector = selectorFromUserQuery(user);
-
-  var user = Meteor.users.findOne(selector);
+// Attempts to find a user from a user query, treating username and email as case insensitive
+var findUserFromUserQuery = function (query) {
+  var user;
+  
+  if (query.id) {
+    user = Meteor.users.findOne(query.id);
+  } else {
+    var fieldName;
+    var string;
+    if (query.username) {
+      fieldName = "username";
+      string = query.username;
+    } else if (query.email) {
+      fieldName = "emails.address";
+      string = query.email;
+    }
+    var selector = {};
+    selector[fieldName] = string;
+    user = Meteor.users.findOne(selector);
+    // If user is not found, try a case insensitive lookup
+    if (!user) {
+      selector = selectorForFastCaseInsensitiveLookup(fieldName, string);
+      user = Meteor.users.findOne(selector);
+    }
+  }
+  
   if (!user)
     throw new Meteor.Error(403, "User not found");
 
   return user;
 };
+
+
+// Generates a MongoDB selector that can be used to perform a fast case insensitive lookup for the given fieldName and string
+var selectorForFastCaseInsensitiveLookup = function (fieldName, string) {
+  // Performance seems to improve up to 4 prefix characters
+  var prefix = string.substring(0, Math.min(string.length, 4));
+  var orClause = _.map(generateCasePermutationsForString(prefix), function (prefixPermutation) {
+    var selector = {};
+    selector[fieldName] = {$regex: new RegExp(prefixPermutation)};
+    return selector;
+  });
+  var caseInsensitiveClause = {};
+  caseInsensitiveClause[fieldName] = {$regex: new RegExp(string, 'i')}
+  return {$and: [{$or: orClause}, caseInsensitiveClause]};
+}
+
+// Generates permutations of all case variations of a given string
+// Because it uses a bit mask to decide whether to convert a given character to upper or lower case, 
+// and bitwise operators act on 32 bit integers, it only works up to 32 characters.
+// (Not that you'd want anything close to a 2^32 permutations...)
+var generateCasePermutationsForString = function (string) {
+  if (string.length > 32)
+    throw new Error('generateCasePermutationsForString only works on strings up to 32 characters');
+  
+  // Number of permutations is 2^n
+  var numberOfPermutations = Math.pow(2, string.length)
+  var permutations = [];
+  for (var i = 0; i < numberOfPermutations; i++) {
+    var permutation = [];
+    for (var j = 0; j < string.length; j++) {
+      var isBitSet = (i >> j & 1) != 0
+      permutation[j] = isBitSet ? string[j].toUpperCase() : string[j].toLowerCase();
+    }
+    permutations[i] = permutation.join('');
+  }
+  return permutations;
+}
 
 // XXX maybe this belongs in the check package
 var NonEmptyString = Match.Where(function (x) {
