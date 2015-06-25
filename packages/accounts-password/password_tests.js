@@ -169,7 +169,7 @@ if (Meteor.isClient) (function () {
   
   testAsyncMulti("passwords - logging in with case insensitive username", [
     function (test, expect) {
-      this.randomSuffix = Random.id(2);
+      this.randomSuffix = Random.id(10);
       this.username = 'AdaLovelace' + this.randomSuffix;
       this.email =  "Ada@lovelace.com" + this.randomSuffix;
       this.password = 'password';
@@ -188,7 +188,7 @@ if (Meteor.isClient) (function () {
   
   testAsyncMulti("passwords - logging in with case insensitive username when there are multiple matches", [
     function (test, expect) {
-      this.randomSuffix = Random.id(2);
+      this.randomSuffix = Random.id(10);
       this.username = 'AdaLovelace' + this.randomSuffix;
       this.email =  "Ada@lovelace.com" + this.randomSuffix;
       this.password = 'password';
@@ -218,7 +218,7 @@ if (Meteor.isClient) (function () {
   
   testAsyncMulti("passwords - creating users with the same case insensitive username", [
     function (test, expect) {
-      this.randomSuffix = Random.id(2);
+      this.randomSuffix = Random.id(10);
       this.username = 'AdaLovelace' + this.randomSuffix;
       this.password = 'password';
 
@@ -238,7 +238,7 @@ if (Meteor.isClient) (function () {
   
   testAsyncMulti("passwords - logging in with case insensitive email", [
     function (test, expect) {
-      this.randomSuffix = Random.id(2);
+      this.randomSuffix = Random.id(10);
       this.username = 'AdaLovelace' + this.randomSuffix;
       this.email =  "Ada@lovelace.com" + this.randomSuffix;
       this.password = 'password';
@@ -257,7 +257,7 @@ if (Meteor.isClient) (function () {
   
   testAsyncMulti("passwords - logging in with case insensitive email when there are multiple matches", [
     function (test, expect) {
-      this.randomSuffix = Random.id(2);
+      this.randomSuffix = Random.id(10);
       this.username = 'AdaLovelace' + this.randomSuffix;
       this.email =  "Ada@lovelace.com" + this.randomSuffix;
       this.password = 'password';
@@ -268,7 +268,7 @@ if (Meteor.isClient) (function () {
     },
     logoutStep,
     function (test, expect) {
-      var username = 'AdaLovelace' + Random.id(2);
+      var username = 'AdaLovelace' + Random.id(10);
       var email =  "ADA@lovelace.com" + this.randomSuffix;
       Accounts.createUser(
         {username: username, email: email, password: this.password, _skipCaseInsensitiveChecks: true},
@@ -289,7 +289,7 @@ if (Meteor.isClient) (function () {
   
   testAsyncMulti("passwords - creating users with the same case insensitive email", [
     function (test, expect) {
-      this.randomSuffix = Random.id(2);
+      this.randomSuffix = Random.id(10);
       this.username = 'AdaLovelace' + this.randomSuffix;
       this.email =  "Ada@lovelace.com" + this.randomSuffix;
       this.password = 'password';
