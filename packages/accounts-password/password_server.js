@@ -78,6 +78,8 @@ var checkPassword = Accounts._checkPassword;
 ///
 
 // Attempts to find a user from a user query, treating username and email as case insensitive
+// @param user {Object} with one of `id`, `username`, or `email`.
+// @returns A user if found, else undefined
 var findUserFromQuery = function (query) {
   var user;
   
@@ -111,7 +113,7 @@ var findUserFromQuery = function (query) {
 };
 
 
-// Generates a MongoDB selector that can be used to perform a fast case insensitive lookup for the given fieldName and string
+// Generates a MongoDB selector that can be used to perform a fast case insensitive lookup for the given fieldName and string. Since MongoDB does not support case insensitive indexes, and case insensitive regex queries are slow, we construct a set of prefix selectors for all permutations of the first 4 characters ourselves. This has been found to greatly improve performance (from 1200ms to 5ms in a test with 1.000.000 users).
 var selectorForFastCaseInsensitiveLookup = function (fieldName, string) {
   // Performance seems to improve up to 4 prefix characters
   var prefix = string.substring(0, Math.min(string.length, 4));
@@ -754,6 +756,7 @@ var createUser = function (options) {
   if (!username && !email)
     throw new Meteor.Error(400, "Need to set a username or email");
   
+  // Some tests need the ability to add users with the same case insensitive username or email
   if (!options._skipCaseInsensitiveChecks) {
     // Perform a case insensitive check for a user with the same username
     if (username && findUserFromQuery({username: username})) {

@@ -169,17 +169,17 @@ if (Meteor.isClient) (function () {
   
   testAsyncMulti("passwords - logging in with case insensitive username", [
     function (test, expect) {
+      // Hack because Tinytest does not clean the database between tests/runs
       this.randomSuffix = Random.id(10);
       this.username = 'AdaLovelace' + this.randomSuffix;
-      this.email =  "Ada@lovelace.com" + this.randomSuffix;
       this.password = 'password';
 
       Accounts.createUser(
-        {username: this.username, email: this.email, password: this.password},
+        {username: this.username, password: this.password},
         loggedInAs(this.username, test, expect));
     },
     logoutStep,
-    // Check if we can log in with the username in lower case
+    // We should be able to log in with the username in lower case
     function(test, expect) {
       Meteor.loginWithPassword({username: "adalovelace" + this.randomSuffix}, this.password, 
                                loggedInAs(this.username, test, expect));
@@ -188,16 +188,17 @@ if (Meteor.isClient) (function () {
   
   testAsyncMulti("passwords - logging in with case insensitive username when there are multiple matches", [
     function (test, expect) {
+      // Hack because Tinytest does not clean the database between tests/runs
       this.randomSuffix = Random.id(10);
       this.username = 'AdaLovelace' + this.randomSuffix;
-      this.email =  "Ada@lovelace.com" + this.randomSuffix;
       this.password = 'password';
 
       Accounts.createUser(
-        {username: this.username, email: this.email, password: this.password},
+        {username: this.username, password: this.password},
         loggedInAs(this.username, test, expect));
     },
     logoutStep,
+    // Create another user with a username that only differs in case
     function (test, expect) {
       var username = 'Adalovelace' + this.randomSuffix;
       Accounts.createUser(
@@ -209,7 +210,7 @@ if (Meteor.isClient) (function () {
       Meteor.loginWithPassword({username: "adalovelace" + this.randomSuffix}, this.password, 
                                expectUserNotFound(test, expect));
     },
-    // Check if we can log in with the username in original case
+    // We should still be able to log in with the username in original case
     function(test, expect) {
       Meteor.loginWithPassword({username: this.username}, this.password, 
                                loggedInAs(this.username, test, expect));
@@ -218,6 +219,7 @@ if (Meteor.isClient) (function () {
   
   testAsyncMulti("passwords - creating users with the same case insensitive username", [
     function (test, expect) {
+      // Hack because Tinytest does not clean the database between tests/runs
       this.randomSuffix = Random.id(10);
       this.username = 'AdaLovelace' + this.randomSuffix;
       this.password = 'password';
@@ -227,7 +229,7 @@ if (Meteor.isClient) (function () {
         loggedInAs(this.username, test, expect));
     },
     logoutStep,
-    // Attempt to create another user with a username that only differs in case
+    // Attempting to create another user with a username that only differs in case should fail
     function(test, expect) {
       var username = 'adalovelace' + this.randomSuffix;
       Accounts.createUser(
@@ -238,7 +240,9 @@ if (Meteor.isClient) (function () {
   
   testAsyncMulti("passwords - logging in with case insensitive email", [
     function (test, expect) {
+      // Hack because Tinytest does not clean the database between tests/runs
       this.randomSuffix = Random.id(10);
+      // We still need a username to check whether we are logged in
       this.username = 'AdaLovelace' + this.randomSuffix;
       this.email =  "Ada@lovelace.com" + this.randomSuffix;
       this.password = 'password';
@@ -248,7 +252,7 @@ if (Meteor.isClient) (function () {
         loggedInAs(this.username, test, expect));
     },
     logoutStep,
-    // Check if we can log in with the email in lower case
+    // We should be able to log in with the email in lower case
     function(test, expect) {
       Meteor.loginWithPassword({email: "ada@lovelace.com" + this.randomSuffix}, this.password, 
                                loggedInAs(this.username, test, expect));
@@ -257,7 +261,9 @@ if (Meteor.isClient) (function () {
   
   testAsyncMulti("passwords - logging in with case insensitive email when there are multiple matches", [
     function (test, expect) {
+      // Hack because Tinytest does not clean the database between tests/runs
       this.randomSuffix = Random.id(10);
+      // We still need a username to check whether we are logged in
       this.username = 'AdaLovelace' + this.randomSuffix;
       this.email =  "Ada@lovelace.com" + this.randomSuffix;
       this.password = 'password';
@@ -267,6 +273,7 @@ if (Meteor.isClient) (function () {
         loggedInAs(this.username, test, expect));
     },
     logoutStep,
+    // Create another user with an email that only differs in case
     function (test, expect) {
       var username = 'AdaLovelace' + Random.id(10);
       var email =  "ADA@lovelace.com" + this.randomSuffix;
@@ -275,12 +282,12 @@ if (Meteor.isClient) (function () {
         loggedInAs(username, test, expect));
     },
     logoutStep,
-    // Check if we can log in with the email in lower case
+    // We shouldn't be able to log in with the email in lower case
     function(test, expect) {
       Meteor.loginWithPassword({email: "ada@lovelace.com" + this.randomSuffix}, this.password, 
                                expectUserNotFound(test, expect));
     },
-    // Check if we can log in with the email in original case
+    // We should still be able to log in with the email in original case
     function(test, expect) {
       Meteor.loginWithPassword({email: this.email}, this.password, 
                                loggedInAs(this.username, test, expect));
@@ -289,7 +296,9 @@ if (Meteor.isClient) (function () {
   
   testAsyncMulti("passwords - creating users with the same case insensitive email", [
     function (test, expect) {
+      // Hack because Tinytest does not clean the database between tests/runs
       this.randomSuffix = Random.id(10);
+      // We still need a username to check whether we are logged in
       this.username = 'AdaLovelace' + this.randomSuffix;
       this.email =  "Ada@lovelace.com" + this.randomSuffix;
       this.password = 'password';
@@ -299,7 +308,7 @@ if (Meteor.isClient) (function () {
         loggedInAs(this.username, test, expect));
     },
     logoutStep,
-    // Attempt to create another user with an email that only differs in case
+    // Attempting to create another user with an email that only differs in case should fail
     function(test, expect) {
       var email =  "ada@lovelace.com" + this.randomSuffix;
       Accounts.createUser(
