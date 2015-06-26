@@ -85,7 +85,7 @@ var checkPassword = Accounts._checkPassword;
 // @returns A user if found, else null
 var findUserFromQuery = function (query) {
   var user = null;
-  
+
   if (query.id) {
     user = Meteor.users.findOne(query.id);
   } else {
@@ -130,7 +130,7 @@ var findUserFromQuery = function (query) {
 var selectorForFastCaseInsensitiveLookup = function (fieldName, string) {
   // Performance seems to improve up to 4 prefix characters
   var prefix = string.substring(0, Math.min(string.length, 4));
-  var orClause = _.map(generateCasePermutationsForString(prefix), 
+  var orClause = _.map(generateCasePermutationsForString(prefix),
     function (prefixPermutation) {
       var selector = {};
       selector[fieldName] = new RegExp('^' + escapeRegExp(prefixPermutation));
@@ -765,14 +765,14 @@ var createUser = function (options) {
   var email = options.email;
   if (!username && !email)
     throw new Meteor.Error(400, "Need to set a username or email");
-  
+
   // Some tests need the ability to add users with the same case insensitive username or email
   if (!Accounts._skipCaseInsensitiveChecksForTest) {
     // Perform a case insensitive check for a user with the same username
     if (username && findUserFromQuery({username: username})) {
       throw new Meteor.Error(403, "Username already exists.");
     }
-    
+
     // Perform a case insensitive check for a user with the same email
     if (email && findUserFromQuery({email: email})) {
       throw new Meteor.Error(403, "Email already exists.");
