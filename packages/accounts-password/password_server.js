@@ -142,6 +142,7 @@ var selectorForFastCaseInsensitiveLookup = function (fieldName, string) {
 }
 
 // Escapes characters that have special meaning when constructing a RegExp
+// Code taken from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
 function escapeRegExp(string){
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
