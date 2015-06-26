@@ -87,20 +87,20 @@ var findUserFromQuery = function (query) {
     user = Meteor.users.findOne(query.id);
   } else {
     var fieldName;
-    var string;
+    var fieldValue;
     if (query.username) {
       fieldName = "username";
-      string = query.username;
+      fieldValue = query.username;
     } else if (query.email) {
       fieldName = "emails.address";
-      string = query.email;
+      fieldValue = query.email;
     }
     var selector = {};
-    selector[fieldName] = string;
+    selector[fieldName] = fieldValue;
     user = Meteor.users.findOne(selector);
     // If user is not found, try a case insensitive lookup
     if (!user) {
-      selector = selectorForFastCaseInsensitiveLookup(fieldName, string);
+      selector = selectorForFastCaseInsensitiveLookup(fieldName, fieldValue);
       var candidateUsers = Meteor.users.find(selector).fetch();
       // No match if multiple candidates are found
       if (candidateUsers.length == 1) {
