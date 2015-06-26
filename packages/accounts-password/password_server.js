@@ -77,11 +77,14 @@ var checkPassword = Accounts._checkPassword;
 /// LOGIN
 ///
 
-// Attempts to find a user from a user query, treating username and email as case insensitive
-// @param user {Object} with one of `id`, `username`, or `email`.
-// @returns A user if found, else undefined
+// Attempts to find a user from a user query.
+// First tries to match username or email case sensitively; if that fails, it
+// tries case insensitively; but if more than one user matches the case
+// insensitive search, it returns null
+// @param query {Object} with one of `id`, `username`, or `email`.
+// @returns A user if found, else null
 var findUserFromQuery = function (query) {
-  var user;
+  var user = null;
   
   if (query.id) {
     user = Meteor.users.findOne(query.id);
@@ -94,6 +97,8 @@ var findUserFromQuery = function (query) {
     } else if (query.email) {
       fieldName = "emails.address";
       fieldValue = query.email;
+    } else {
+      throw new Error("shouldn't happen (validation missed something)");
     }
     var selector = {};
     selector[fieldName] = fieldValue;
@@ -103,7 +108,7 @@ var findUserFromQuery = function (query) {
       selector = selectorForFastCaseInsensitiveLookup(fieldName, fieldValue);
       var candidateUsers = Meteor.users.find(selector).fetch();
       // No match if multiple candidates are found
-      if (candidateUsers.length == 1) {
+      if (candidateUsers.length === 1) {
         user = candidateUsers[0];
       }
     }
@@ -113,23 +118,33 @@ var findUserFromQuery = function (query) {
 };
 
 
-// Generates a MongoDB selector that can be used to perform a fast case insensitive lookup for the given fieldName and string. Since MongoDB does not support case insensitive indexes, and case insensitive regex queries are slow, we construct a set of prefix selectors for all permutations of the first 4 characters ourselves. This has been found to greatly improve performance (from 1200ms to 5ms in a test with 1.000.000 users).
+// Generates a MongoDB selector that can be used to perform a fast case
+// insensitive lookup for the given fieldName and string. Since MongoDB does
+// not support case insensitive indexes, and case insensitive regex queries
+// are slow, we construct a set of prefix selectors for all permutations of
+// the first 4 characters ourselves. We first attempt to matching against
+// these, and because 'prefix expression' regex queries do use indexes (see
+// http://docs.mongodb.org/v2.6/reference/operator/query/regex/), this has
+// been found to greatly improve performance (from 1200ms to 5ms in a test with
+// 1.000.000 users).
 var selectorForFastCaseInsensitiveLookup = function (fieldName, string) {
   // Performance seems to improve up to 4 prefix characters
   var prefix = string.substring(0, Math.min(string.length, 4));
-  var orClause = _.map(generateCasePermutationsForString(prefix), function (prefixPermutation) {
-    var selector = {};
-    selector[fieldName] = {$regex: new RegExp('^' + prefixPermutation)};
-    return selector;
-  });
+  var orClause = _.map(generateCasePermutationsForString(prefix), 
+    function (prefixPermutation) {
+      var selector = {};
+      selector[fieldName] = new RegExp('^' + prefixPermutation);
+      return selector;
+    });
   var caseInsensitiveClause = {};
-  caseInsensitiveClause[fieldName] = {$regex: new RegExp('^' + string + '$', 'i')}
+  caseInsensitiveClause[fieldName] = new RegExp('^' + string + '$', 'i')
   return {$and: [{$or: orClause}, caseInsensitiveClause]};
 }
 
-// Generates permutations of all case variations of a given string
-// Because it uses a bit mask to decide whether to convert a given character to upper or lower case, 
-// and bitwise operators act on 32 bit integers, it only works up to 32 characters.
+// Generates permutations of all case variations of a given string.
+// Because it uses a bit mask to decide whether to convert a given character to
+// upper or lower case, and bitwise operators act on 32 bit integers, it only
+// works up to 32 characters. 
 // (Not that you'd want anything close to a 2^32 permutations...)
 var generateCasePermutationsForString = function (string) {
   if (string.length > 32)
