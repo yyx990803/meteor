@@ -119,11 +119,11 @@ var selectorForFastCaseInsensitiveLookup = function (fieldName, string) {
   var prefix = string.substring(0, Math.min(string.length, 4));
   var orClause = _.map(generateCasePermutationsForString(prefix), function (prefixPermutation) {
     var selector = {};
-    selector[fieldName] = {$regex: new RegExp(prefixPermutation)};
+    selector[fieldName] = {$regex: new RegExp('^' + prefixPermutation)};
     return selector;
   });
   var caseInsensitiveClause = {};
-  caseInsensitiveClause[fieldName] = {$regex: new RegExp(string, 'i')}
+  caseInsensitiveClause[fieldName] = {$regex: new RegExp('^' + string + '$', 'i')}
   return {$and: [{$or: orClause}, caseInsensitiveClause]};
 }
 
