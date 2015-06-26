@@ -133,12 +133,17 @@ var selectorForFastCaseInsensitiveLookup = function (fieldName, string) {
   var orClause = _.map(generateCasePermutationsForString(prefix), 
     function (prefixPermutation) {
       var selector = {};
-      selector[fieldName] = new RegExp('^' + prefixPermutation);
+      selector[fieldName] = new RegExp('^' + escapeRegExp(prefixPermutation));
       return selector;
     });
   var caseInsensitiveClause = {};
-  caseInsensitiveClause[fieldName] = new RegExp('^' + string + '$', 'i')
+  caseInsensitiveClause[fieldName] = new RegExp('^' + escapeRegExp(string) + '$', 'i')
   return {$and: [{$or: orClause}, caseInsensitiveClause]};
+}
+
+// Escapes characters that have special meaning when constructing a RegExp
+function escapeRegExp(string){
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 // Generates permutations of all case variations of a given string.
