@@ -766,7 +766,7 @@ var createUser = function (options) {
     throw new Meteor.Error(400, "Need to set a username or email");
   
   // Some tests need the ability to add users with the same case insensitive username or email
-  if (!options._skipCaseInsensitiveChecks) {
+  if (!Accounts._skipCaseInsensitiveChecksForTest) {
     // Perform a case insensitive check for a user with the same username
     if (username && findUserFromQuery({username: username})) {
       throw new Meteor.Error(403, "Username already exists.");

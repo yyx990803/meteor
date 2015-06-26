@@ -8,6 +8,9 @@ if (Meteor.isServer) {
     getResetToken: function () {
       var token = Meteor.users.findOne(this.userId).services.password.reset;
       return token;
+    },
+    setSkipCaseInsensitiveChecksForTest: function (value) {
+      Accounts._skipCaseInsensitiveChecksForTest = value;
     }
   });
 }
@@ -18,6 +21,14 @@ if (Meteor.isClient) (function () {
   // now, that is this test.
 
   Accounts._isolateLoginTokenForTest();
+  
+  var skipCaseInsensitiveChecksForTest = function (test, expect) {
+    Meteor.call('setSkipCaseInsensitiveChecksForTest', true, expect);
+  };
+  
+  var restoreCaseInsensitiveChecksForTest = function (test, expect) {
+    Meteor.call('setSkipCaseInsensitiveChecksForTest', false, expect);
+  };
 
   var createUserStep = function (test, expect) {
     // Hack because Tinytest does not clean the database between tests/runs
@@ -211,12 +222,14 @@ if (Meteor.isClient) (function () {
     createUserStep,
     logoutStep,
     // Create another user with a username that only differs in case
+    skipCaseInsensitiveChecksForTest,
     function (test, expect) {
       var username = 'Adalovelace' + this.randomSuffix;
       Accounts.createUser(
-        {username: username, password: this.password, _skipCaseInsensitiveChecks: true},
+        {username: username, password: this.password},
         loggedInAs(username, test, expect));
     },
+    restoreCaseInsensitiveChecksForTest,
     // We shouldn't be able to log in with the username in lower case
     function(test, expect) {
       Meteor.loginWithPassword({username: "adalovelace" + this.randomSuffix}, this.password, 
@@ -275,13 +288,15 @@ if (Meteor.isClient) (function () {
     createUserStep,
     logoutStep,
     // Create another user with an email that only differs in case
+    skipCaseInsensitiveChecksForTest,
     function (test, expect) {
       var username = 'AdaLovelace' + Random.id(10);
       var email =  "ADA@lovelace.com" + this.randomSuffix;
       Accounts.createUser(
-        {username: username, email: email, password: this.password, _skipCaseInsensitiveChecks: true},
+        {username: username, email: email, password: this.password},
         loggedInAs(username, test, expect));
     },
+    restoreCaseInsensitiveChecksForTest,
     logoutStep,
     // We shouldn't be able to log in with the email in lower case
     function(test, expect) {
