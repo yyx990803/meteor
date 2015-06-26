@@ -147,24 +147,13 @@ function escapeRegExp(string){
 }
 
 // Generates permutations of all case variations of a given string.
-// Because it uses a bit mask to decide whether to convert a given character to
-// upper or lower case, and bitwise operators act on 32 bit integers, it only
-// works up to 32 characters. 
-// (Not that you'd want anything close to a 2^32 permutations...)
 var generateCasePermutationsForString = function (string) {
-  if (string.length > 32)
-    throw new Error('generateCasePermutationsForString only works on strings up to 32 characters');
-  
-  // Number of permutations is 2^n
-  var numberOfPermutations = Math.pow(2, string.length)
-  var permutations = [];
-  for (var i = 0; i < numberOfPermutations; i++) {
-    var permutation = [];
-    for (var j = 0; j < string.length; j++) {
-      var isBitSet = (i >> j & 1) != 0
-      permutation[j] = isBitSet ? string[j].toUpperCase() : string[j].toLowerCase();
-    }
-    permutations[i] = permutation.join('');
+  var permutations = [''];
+  for (var i = 0; i < string.length; i++) {
+    var ch = string.charAt(i);
+    permutations = _.flatten(_.map(permutations, function (prefix) {
+      return [prefix + ch.toLowerCase(), prefix + ch.toUpperCase()];
+    }));
   }
   return permutations;
 }
