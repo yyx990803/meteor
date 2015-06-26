@@ -39,6 +39,8 @@ will send the user an email with a link to set their initial password.
 By default the `profile` option is added directly to the new user document. To
 override this behavior, use [`Accounts.onCreateUser`](#accounts_oncreateuser).
 
+If there are existing users with a username or email only differing in case, `createUser` will fail.
+
 This function is only used for creating users with passwords. The external
 service login flows do not use this function.
 

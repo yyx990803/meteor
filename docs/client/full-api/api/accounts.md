@@ -134,6 +134,8 @@ will be logged out.
 
 {{> autoApiBox "Meteor.loginWithPassword"}}
 
+If there are multiple users with a username or email only differing in case, a case sensitive match is required.
+
 This function is provided by the `accounts-password` package. See the
 [Passwords](#accounts_passwords) section below.
 
