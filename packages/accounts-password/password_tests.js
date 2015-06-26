@@ -197,6 +197,16 @@ if (Meteor.isClient) (function () {
     }
   ]);
   
+  testAsyncMulti("passwords - logging in with case insensitive username should require a match of the full string", [
+    createUserStep,
+    logoutStep,
+    // We shouldn't be able to log in with a partial match for the username
+    function(test, expect) {
+      Meteor.loginWithPassword({username: "lovelace" + this.randomSuffix}, this.password, 
+                               expectUserNotFound(test, expect));
+    }
+  ]);
+  
   testAsyncMulti("passwords - logging in with case insensitive username when there are multiple matches", [
     createUserStep,
     logoutStep,
@@ -247,6 +257,16 @@ if (Meteor.isClient) (function () {
     // We shouldn't be able to log in with a regex expression for the email
     function(test, expect) {
       Meteor.loginWithPassword({email: ".+" + this.randomSuffix}, this.password, 
+                               expectUserNotFound(test, expect));
+    }
+  ]);
+  
+  testAsyncMulti("passwords - logging in with case insensitive email should require a match of the full string", [
+    createUserStep,
+    logoutStep,
+    // We shouldn't be able to log in with a partial match for the email
+    function(test, expect) {
+      Meteor.loginWithPassword({email: "com" + this.randomSuffix}, this.password, 
                                expectUserNotFound(test, expect));
     }
   ]);
