@@ -13,7 +13,6 @@ if (Meteor.isServer) {
       Accounts._skipCaseInsensitiveChecksForTest = value;
     },
     countUsersOnServer: function (query) {
-      console.log('countUsersOnServer: ' + JSON.stringify(query));
       return Meteor.users.find(query).count();
     }
   });
