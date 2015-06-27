@@ -26,7 +26,7 @@ id.
 
 On the client, you must pass `password` and at least one of `username` or
 `email` &mdash; enough information for the user to be able to log in again
-later. On the server, you do not need to specify `password`, but the user will
+later. If there are existing users with a username or email only differing in case, `createUser` will fail. On the server, you do not need to specify `password`, but the user will
 not be able to log in until it has a password (eg, set with
 [`Accounts.setPassword`](#accounts_setpassword)).
 
@@ -38,8 +38,6 @@ will send the user an email with a link to set their initial password.
 
 By default the `profile` option is added directly to the new user document. To
 override this behavior, use [`Accounts.onCreateUser`](#accounts_oncreateuser).
-
-If there are existing users with a username or email only differing in case, `createUser` should fail. Because MongoDB has no support for case insensitive indexes, a separate query is performed to check for this. Although unlikely, this opens up the possibility that two users with a username or email only differing in case are created simultaneously. In that case, those users will require a case sensitive username or email to login.
 
 This function is only used for creating users with passwords. The external
 service login flows do not use this function.
