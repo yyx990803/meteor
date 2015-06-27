@@ -766,19 +766,6 @@ var createUser = function (options) {
   if (!username && !email)
     throw new Meteor.Error(400, "Need to set a username or email");
 
-  // Some tests need the ability to add users with the same case insensitive username or email
-  if (!Accounts._skipCaseInsensitiveChecksForTest) {
-    // Perform a case insensitive check for a user with the same username
-    if (username && findUserFromQuery({username: username})) {
-      throw new Meteor.Error(403, "Username already exists.");
-    }
-
-    // Perform a case insensitive check for a user with the same email
-    if (email && findUserFromQuery({email: email})) {
-      throw new Meteor.Error(403, "Email already exists.");
-    }
-  }
-
   var user = {services: {}};
   if (options.password) {
     var hashed = hashPassword(options.password);
@@ -790,7 +777,25 @@ var createUser = function (options) {
   if (email)
     user.emails = [{address: email, verified: false}];
 
-  return Accounts.insertUserDoc(options, user);
+  var userId = Accounts.insertUserDoc(options, user);
+
+  // Make sure there is no other user with a username or email only differing
+  // in case. We do the check after the insert to avoid a situation where two
+  // such users are inserted simultaneously.
+  // Some tests need the ability to add users with the same case insensitive
+  // username or email, hence the flag.
+  if (!Accounts._skipCaseInsensitiveChecksForTest) {
+    if (username && Meteor.users.find(selectorForFastCaseInsensitiveLookup("username", username)).count() > 1) {
+      Meteor.users.remove(userId);
+      throw new Meteor.Error(403, "Username already exists.");
+    }
+    if (email && Meteor.users.find(selectorForFastCaseInsensitiveLookup("emails.address", email)).count() > 1) {
+      Meteor.users.remove(userId);
+      throw new Meteor.Error(403, "Email already exists.");
+    }
+  }
+
+  return userId;
 };
 
 // method for create user. Requests come from the client.

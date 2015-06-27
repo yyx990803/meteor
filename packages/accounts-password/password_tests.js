@@ -11,6 +11,10 @@ if (Meteor.isServer) {
     },
     setSkipCaseInsensitiveChecksForTest: function (value) {
       Accounts._skipCaseInsensitiveChecksForTest = value;
+    },
+    countUsersOnServer: function (query) {
+      console.log('countUsersOnServer: ' + JSON.stringify(query));
+      return Meteor.users.find(query).count();
     }
   });
 }
@@ -247,10 +251,16 @@ if (Meteor.isClient) (function () {
     logoutStep,
     // Attempting to create another user with a username that only differs in case should fail
     function(test, expect) {
-      var username = 'adalovelace' + this.randomSuffix;
+      this.newUsername = 'adalovelace' + this.randomSuffix;
       Accounts.createUser(
-        {username: username, password: this.password},
+        {username: this.newUsername, password: this.password},
         expectError(new Meteor.Error(403, "Username already exists."), test, expect));
+    },
+    // Make sure the new user has not been inserted
+    function(test, expect) {
+      Meteor.call('countUsersOnServer', {username: this.newUsername}, expect(function (error, result) {
+        test.equal(result, 0);
+      }));
     }
   ]);
 
@@ -315,10 +325,16 @@ if (Meteor.isClient) (function () {
     logoutStep,
     // Attempting to create another user with an email that only differs in case should fail
     function(test, expect) {
-      var email =  "ada@lovelace.com" + this.randomSuffix;
+      this.newEmail =  "ada@lovelace.com" + this.randomSuffix;
       Accounts.createUser(
-        {email: email, password: this.password},
+        {email: this.newEmail, password: this.password},
         expectError(new Meteor.Error(403, "Email already exists."), test, expect));
+    },
+    // Make sure the new user has not been inserted
+    function(test, expect) {
+      Meteor.call('countUsersOnServer', {'emails.address': this.newEmail}, expect(function (error, result) {
+        test.equal(result, 0);
+      }));
     }
   ]);
 
