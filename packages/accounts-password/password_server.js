@@ -784,16 +784,20 @@ var createUser = function (options) {
   // in case.
   var performCaseInsensitiveCheck = function () {
     // Some tests need the ability to add users with the same case insensitive
-    // username or email, hence the flag.
-    if (!Accounts._skipCaseInsensitiveChecksForTest) {
-      if (username && Meteor.users.find(selectorForFastCaseInsensitiveLookup(
+    // username or email, hence the _skipCaseInsensitiveChecksForTest check
+
+    if (username &&
+      !Accounts._skipCaseInsensitiveChecksForTest[username] &&
+      Meteor.users.find(selectorForFastCaseInsensitiveLookup(
         "username", username)).count() > 1) {
-        throw new Meteor.Error(403, "Username already exists.");
-      }
-      if (email && Meteor.users.find(selectorForFastCaseInsensitiveLookup(
+          throw new Meteor.Error(403, "Username already exists.");
+    }
+
+    if (email &&
+      !Accounts._skipCaseInsensitiveChecksForTest[email] &&
+      Meteor.users.find(selectorForFastCaseInsensitiveLookup(
         "emails.address", email)).count() > 1) {
-          throw new Meteor.Error(403, "Email already exists.");
-      }
+        throw new Meteor.Error(403, "Email already exists.");
     }
   }
 

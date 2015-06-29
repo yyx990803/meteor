@@ -51,6 +51,8 @@ AccountsServer = function AccountsServer(server) {
   ];
 
   this._deleteSavedTokensForAllUsersOnStartup();
+
+  this._skipCaseInsensitiveChecksForTest = {};
 };
 
 Meteor._inherits(AccountsServer, AccountsCommon);

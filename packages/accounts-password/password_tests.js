@@ -9,8 +9,11 @@ if (Meteor.isServer) {
       var token = Meteor.users.findOne(this.userId).services.password.reset;
       return token;
     },
-    setSkipCaseInsensitiveChecksForTest: function (value) {
-      Accounts._skipCaseInsensitiveChecksForTest = value;
+    addSkipCaseInsensitiveChecksForTest: function (value) {
+      Accounts._skipCaseInsensitiveChecksForTest[value] = true;
+    },
+    removeSkipCaseInsensitiveChecksForTest: function (value) {
+      delete Accounts._skipCaseInsensitiveChecksForTest[value];
     },
     countUsersOnServer: function (query) {
       return Meteor.users.find(query).count();
@@ -25,12 +28,12 @@ if (Meteor.isClient) (function () {
 
   Accounts._isolateLoginTokenForTest();
 
-  var skipCaseInsensitiveChecksForTest = function (test, expect) {
-    Meteor.call('setSkipCaseInsensitiveChecksForTest', true, expect);
+  var addSkipCaseInsensitiveChecksForTest = function (value, test, expect) {
+    Meteor.call('addSkipCaseInsensitiveChecksForTest', value, expect);
   };
 
-  var restoreCaseInsensitiveChecksForTest = function (test, expect) {
-    Meteor.call('setSkipCaseInsensitiveChecksForTest', false, expect);
+  var removeSkipCaseInsensitiveChecksForTest = function (value, test, expect) {
+    Meteor.call('removeSkipCaseInsensitiveChecksForTest', value, expect);
   };
 
   var createUserStep = function (test, expect) {
@@ -250,15 +253,19 @@ if (Meteor.isClient) (function () {
   testAsyncMulti("passwords - logging in with case insensitive username when there are multiple matches", [
     createUserStep,
     logoutStep,
-    // Create another user with a username that only differs in case
-    skipCaseInsensitiveChecksForTest,
     function (test, expect) {
-      var username = 'Adalovelace' + this.randomSuffix;
-      Accounts.createUser(
-        { username: username, password: this.password },
-        loggedInAs(username, test, expect));
+      this.otherUserName = 'Adalovelace' + this.randomSuffix;
+      addSkipCaseInsensitiveChecksForTest(this.otherUserName, test, expect);
     },
-    restoreCaseInsensitiveChecksForTest,
+    // Create another user with a username that only differs in case
+    function (test, expect) {
+      Accounts.createUser(
+        { username: this.otherUserName, password: this.password },
+        loggedInAs(this.otherUserName, test, expect));
+    },
+    function (test, expect) {
+      removeSkipCaseInsensitiveChecksForTest(this.otherUserName, test, expect);
+    },
     // We shouldn't be able to log in with the username in lower case
     function (test, expect) {
       Meteor.loginWithPassword(
@@ -338,16 +345,22 @@ if (Meteor.isClient) (function () {
   testAsyncMulti("passwords - logging in with case insensitive email when there are multiple matches", [
     createUserStep,
     logoutStep,
-    // Create another user with an email that only differs in case
-    skipCaseInsensitiveChecksForTest,
     function (test, expect) {
-      var username = 'AdaLovelace' + Random.id(10);
-      var email =  "ADA@lovelace.com" + this.randomSuffix;
-      Accounts.createUser(
-        { username: username, email: email, password: this.password },
-        loggedInAs(username, test, expect));
+      this.otherUserName = 'AdaLovelace' + Random.id(10);
+      this.otherEmail =  "ADA@lovelace.com" + this.randomSuffix;
+      addSkipCaseInsensitiveChecksForTest(this.otherEmail, test, expect);
     },
-    restoreCaseInsensitiveChecksForTest,
+    // Create another user with an email that only differs in case
+    function (test, expect) {
+      Accounts.createUser(
+        { username: this.otherUserName,
+          email: this.otherEmail,
+          password: this.password },
+        loggedInAs(this.otherUserName, test, expect));
+    },
+    function (test, expect) {
+      removeSkipCaseInsensitiveChecksForTest(this.otherUserName, test, expect);
+    },
     logoutStep,
     // We shouldn't be able to log in with the email in lower case
     function (test, expect) {
