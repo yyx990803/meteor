@@ -87,7 +87,7 @@ var findUserFromQuery = function (query) {
   var user = null;
 
   if (query.id) {
-    user = Meteor.users.findOne(query.id);
+    user = Meteor.users.findOne({ _id: query.id });
   } else {
     var fieldName;
     var fieldValue;
