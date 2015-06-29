@@ -203,6 +203,26 @@ if (Meteor.isClient) (function () {
     }
   ]);
 
+  testAsyncMulti("passwords - logging in with case insensitive username with non-ASCII characters", [
+    function (test, expect) {
+      // Hack because Tinytest does not clean the database between tests/runs
+      this.randomSuffix = Random.id(10);
+      this.username = 'ÁdaLØvela😈e' + this.randomSuffix;
+      this.password = 'password';
+      Accounts.createUser(
+        {username: this.username, email: this.email, password: this.password},
+        loggedInAs(this.username, test, expect));
+    },
+    logoutStep,
+    // We should be able to log in with the username in lower case
+    function (test, expect) {
+      Meteor.loginWithPassword(
+        { username: "ádaløvela😈e" + this.randomSuffix },
+        this.password,
+        loggedInAs(this.username, test, expect));
+    }
+  ]);
+
   testAsyncMulti("passwords - logging in with case insensitive username should escape regex special characters", [
     createUserStep,
     logoutStep,
