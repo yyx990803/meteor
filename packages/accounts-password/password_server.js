@@ -784,24 +784,35 @@ var createUser = function (options) {
   if (email)
     user.emails = [{address: email, verified: false}];
 
-  var userId = Accounts.insertUserDoc(options, user);
-
-  // Make sure there is no other user with a username or email only differing
-  // in case. We do the check after the insert to avoid a situation where two
-  // such users are inserted simultaneously.
-  // Some tests need the ability to add users with the same case insensitive
-  // username or email, hence the flag.
-  if (!Accounts._skipCaseInsensitiveChecksForTest) {
-    if (username && Meteor.users.find(selectorForFastCaseInsensitiveLookup("username", username)).count() > 1) {
-      Meteor.users.remove(userId);
-      throw new Meteor.Error(403, "Username already exists.");
-    }
-    if (email && Meteor.users.find(selectorForFastCaseInsensitiveLookup("emails.address", email)).count() > 1) {
-      Meteor.users.remove(userId);
-      throw new Meteor.Error(403, "Email already exists.");
+  // Check if there is no other user with a username or email only differing
+  // in case.
+  var performCaseInsensitiveCheck = function () {
+    // Some tests need the ability to add users with the same case insensitive
+    // username or email, hence the flag.
+    if (!Accounts._skipCaseInsensitiveChecksForTest) {
+      if (username && Meteor.users.find(selectorForFastCaseInsensitiveLookup(
+        "username", username)).count() > 1) {
+        throw new Meteor.Error(403, "Username already exists.");
+      }
+      if (email && Meteor.users.find(selectorForFastCaseInsensitiveLookup(
+        "emails.address", email)).count() > 1) {
+          throw new Meteor.Error(403, "Email already exists.");
+      }
     }
   }
 
+  // Perform a case insensitive check before insert
+  performCaseInsensitiveCheck();
+  var userId = Accounts.insertUserDoc(options, user);
+  // Perform another check after insert, in case a matching user has been
+  // inserted in the meantime
+  try {
+    performCaseInsensitiveCheck();
+  } catch (ex) {
+    // Remove inserted user if the check fails
+    Meteor.users.remove(userId);
+    throw ex;
+  }
   return userId;
 };
 
