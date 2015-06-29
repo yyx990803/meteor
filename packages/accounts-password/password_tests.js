@@ -195,9 +195,11 @@ if (Meteor.isClient) (function () {
     createUserStep,
     logoutStep,
     // We should be able to log in with the username in lower case
-    function(test, expect) {
-      Meteor.loginWithPassword({username: "adalovelace" + this.randomSuffix}, this.password,
-                               loggedInAs(this.username, test, expect));
+    function (test, expect) {
+      Meteor.loginWithPassword(
+        { username: "adalovelace" + this.randomSuffix },
+        this.password,
+        loggedInAs(this.username, test, expect));
     }
   ]);
 
@@ -205,9 +207,11 @@ if (Meteor.isClient) (function () {
     createUserStep,
     logoutStep,
     // We shouldn't be able to log in with a regex expression for the username
-    function(test, expect) {
-      Meteor.loginWithPassword({username: ".+" + this.randomSuffix}, this.password,
-                               expectUserNotFound(test, expect));
+    function (test, expect) {
+      Meteor.loginWithPassword(
+        { username: ".+" + this.randomSuffix },
+        this.password,
+        expectUserNotFound(test, expect));
     }
   ]);
 
@@ -215,9 +219,11 @@ if (Meteor.isClient) (function () {
     createUserStep,
     logoutStep,
     // We shouldn't be able to log in with a partial match for the username
-    function(test, expect) {
-      Meteor.loginWithPassword({username: "lovelace" + this.randomSuffix}, this.password,
-                               expectUserNotFound(test, expect));
+    function (test, expect) {
+      Meteor.loginWithPassword(
+        { username: "lovelace" + this.randomSuffix },
+        this.password,
+        expectUserNotFound(test, expect));
     }
   ]);
 
@@ -229,36 +235,46 @@ if (Meteor.isClient) (function () {
     function (test, expect) {
       var username = 'Adalovelace' + this.randomSuffix;
       Accounts.createUser(
-        {username: username, password: this.password},
+        { username: username, password: this.password },
         loggedInAs(username, test, expect));
     },
     restoreCaseInsensitiveChecksForTest,
     // We shouldn't be able to log in with the username in lower case
-    function(test, expect) {
-      Meteor.loginWithPassword({username: "adalovelace" + this.randomSuffix}, this.password,
-                               expectUserNotFound(test, expect));
+    function (test, expect) {
+      Meteor.loginWithPassword(
+        { username: "adalovelace" + this.randomSuffix },
+        this.password,
+        expectUserNotFound(test, expect));
     },
     // We should still be able to log in with the username in original case
-    function(test, expect) {
-      Meteor.loginWithPassword({username: this.username}, this.password,
-                               loggedInAs(this.username, test, expect));
+    function (test, expect) {
+      Meteor.loginWithPassword(
+        { username: this.username },
+        this.password,
+        loggedInAs(this.username, test, expect));
     }
   ]);
 
   testAsyncMulti("passwords - creating users with the same case insensitive username", [
     createUserStep,
     logoutStep,
-    // Attempting to create another user with a username that only differs in case should fail
-    function(test, expect) {
+    // Attempting to create another user with a username that only differs in
+    // case should fail
+    function (test, expect) {
       this.newUsername = 'adalovelace' + this.randomSuffix;
       Accounts.createUser(
-        {username: this.newUsername, password: this.password},
-        expectError(new Meteor.Error(403, "Username already exists."), test, expect));
+        { username: this.newUsername, password: this.password },
+        expectError(
+          new Meteor.Error(403, "Username already exists."),
+          test,
+          expect));
     },
     // Make sure the new user has not been inserted
-    function(test, expect) {
-      Meteor.call('countUsersOnServer', {username: this.newUsername}, expect(function (error, result) {
-        test.equal(result, 0);
+    function (test, expect) {
+      Meteor.call('countUsersOnServer',
+        { username: this.newUsername },
+        expect(function (error, result) {
+          test.equal(result, 0);
       }));
     }
   ]);
@@ -267,9 +283,11 @@ if (Meteor.isClient) (function () {
     createUserStep,
     logoutStep,
     // We should be able to log in with the email in lower case
-    function(test, expect) {
-      Meteor.loginWithPassword({email: "ada@lovelace.com" + this.randomSuffix}, this.password,
-                               loggedInAs(this.username, test, expect));
+    function (test, expect) {
+      Meteor.loginWithPassword(
+        { email: "ada@lovelace.com" + this.randomSuffix },
+        this.password,
+        loggedInAs(this.username, test, expect));
     }
   ]);
 
@@ -277,9 +295,11 @@ if (Meteor.isClient) (function () {
     createUserStep,
     logoutStep,
     // We shouldn't be able to log in with a regex expression for the email
-    function(test, expect) {
-      Meteor.loginWithPassword({email: ".+" + this.randomSuffix}, this.password,
-                               expectUserNotFound(test, expect));
+    function (test, expect) {
+      Meteor.loginWithPassword(
+        { email: ".+" + this.randomSuffix },
+        this.password,
+        expectUserNotFound(test, expect));
     }
   ]);
 
@@ -287,9 +307,11 @@ if (Meteor.isClient) (function () {
     createUserStep,
     logoutStep,
     // We shouldn't be able to log in with a partial match for the email
-    function(test, expect) {
-      Meteor.loginWithPassword({email: "com" + this.randomSuffix}, this.password,
-                               expectUserNotFound(test, expect));
+    function (test, expect) {
+      Meteor.loginWithPassword(
+        { email: "com" + this.randomSuffix },
+        this.password,
+        expectUserNotFound(test, expect));
     }
   ]);
 
@@ -302,38 +324,49 @@ if (Meteor.isClient) (function () {
       var username = 'AdaLovelace' + Random.id(10);
       var email =  "ADA@lovelace.com" + this.randomSuffix;
       Accounts.createUser(
-        {username: username, email: email, password: this.password},
+        { username: username, email: email, password: this.password },
         loggedInAs(username, test, expect));
     },
     restoreCaseInsensitiveChecksForTest,
     logoutStep,
     // We shouldn't be able to log in with the email in lower case
-    function(test, expect) {
-      Meteor.loginWithPassword({email: "ada@lovelace.com" + this.randomSuffix}, this.password,
-                               expectUserNotFound(test, expect));
+    function (test, expect) {
+      Meteor.loginWithPassword(
+        { email: "ada@lovelace.com" + this.randomSuffix },
+        this.password,
+        expectUserNotFound(test, expect));
     },
     // We should still be able to log in with the email in original case
-    function(test, expect) {
-      Meteor.loginWithPassword({email: this.email}, this.password,
-                               loggedInAs(this.username, test, expect));
+    function (test, expect) {
+      Meteor.loginWithPassword(
+        { email: this.email },
+        this.password,
+        loggedInAs(this.username, test, expect));
     }
   ]);
 
   testAsyncMulti("passwords - creating users with the same case insensitive email", [
     createUserStep,
     logoutStep,
-    // Attempting to create another user with an email that only differs in case should fail
-    function(test, expect) {
+    // Attempting to create another user with an email that only differs in
+    // case should fail
+    function (test, expect) {
       this.newEmail =  "ada@lovelace.com" + this.randomSuffix;
       Accounts.createUser(
-        {email: this.newEmail, password: this.password},
-        expectError(new Meteor.Error(403, "Email already exists."), test, expect));
+        { email: this.newEmail, password: this.password },
+        expectError(
+          new Meteor.Error(403, "Email already exists."),
+          test,
+          expect));
     },
     // Make sure the new user has not been inserted
-    function(test, expect) {
-      Meteor.call('countUsersOnServer', {'emails.address': this.newEmail}, expect(function (error, result) {
-        test.equal(result, 0);
-      }));
+    function (test, expect) {
+      Meteor.call('countUsersOnServer',
+        { 'emails.address': this.newEmail },
+        expect (function (error, result) {
+          test.equal(result, 0);
+        })
+      );
     }
   ]);
 
@@ -346,13 +379,14 @@ if (Meteor.isClient) (function () {
       this.password2 = 'password2';
 
       Accounts.createUser(
-        {username: this.username, email: this.email, password: this.password},
+        { username: this.username, email: this.email, password: this.password },
         loggedInAs(this.username, test, expect));
     },
     // Send a password reset email so that we can test that password
     // reset tokens get deleted on password change.
     function (test, expect) {
-      Meteor.call("forgotPassword", { email: this.email }, expect(function (error) {
+      Meteor.call("forgotPassword",
+        { email: this.email }, expect(function (error) {
         test.isFalse(error);
       }));
     },
