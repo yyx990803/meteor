@@ -1256,13 +1256,6 @@ Ap.validateNewUser = function (func) {
   this._validateNewUserHooks.push(func);
 };
 
-// XXX Find a better place for this utility function
-// Like Perl's quotemeta: quotes all regexp metacharacters. See
-//   https://github.com/substack/quotemeta/blob/master/index.js
-var quotemeta = function (str) {
-    return String(str).replace(/(\W)/g, '\\$1');
-};
-
 // Helper function: returns false if email does not match company domain from
 // the configuration.
 Ap._testEmailDomain = function (email) {
@@ -1270,7 +1263,7 @@ Ap._testEmailDomain = function (email) {
   return !domain ||
     (_.isFunction(domain) && domain(email)) ||
     (_.isString(domain) &&
-      (new RegExp('@' + quotemeta(domain) + '$', 'i')).test(email));
+      (new RegExp('@' + Meteor._escapeRegExp(domain) + '$', 'i')).test(email));
 };
 
 // Validate new user's email or Google/Facebook/GitHub account's email

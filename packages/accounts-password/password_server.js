@@ -133,18 +133,14 @@ var selectorForFastCaseInsensitiveLookup = function (fieldName, string) {
   var orClause = _.map(generateCasePermutationsForString(prefix),
     function (prefixPermutation) {
       var selector = {};
-      selector[fieldName] = new RegExp('^' + escapeRegExp(prefixPermutation));
+      selector[fieldName] =
+        new RegExp('^' + Meteor._escapeRegExp(prefixPermutation));
       return selector;
     });
   var caseInsensitiveClause = {};
-  caseInsensitiveClause[fieldName] = new RegExp('^' + escapeRegExp(string) + '$', 'i')
+  caseInsensitiveClause[fieldName] =
+    new RegExp('^' + Meteor._escapeRegExp(string) + '$', 'i')
   return {$and: [{$or: orClause}, caseInsensitiveClause]};
-}
-
-// Escapes characters that have special meaning when constructing a RegExp
-// Code taken from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
-function escapeRegExp(string){
-  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 // Generates permutations of all case variations of a given string.
