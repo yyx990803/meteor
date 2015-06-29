@@ -153,7 +153,14 @@ var generateCasePermutationsForString = function (string) {
   for (var i = 0; i < string.length; i++) {
     var ch = string.charAt(i);
     permutations = _.flatten(_.map(permutations, function (prefix) {
-      return [prefix + ch.toLowerCase(), prefix + ch.toUpperCase()];
+      var lowerCaseChar = ch.toLowerCase();
+      var upperCaseChar = ch.toUpperCase();
+      // Don't add unneccesary permutations when ch is not a letter
+      if (lowerCaseChar === upperCaseChar) {
+        return [prefix + ch];
+      } else {
+        return [prefix + ch.toLowerCase(), prefix + ch.toUpperCase()];
+      }
     }));
   }
   return permutations;
