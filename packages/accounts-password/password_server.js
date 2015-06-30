@@ -155,7 +155,7 @@ var generateCasePermutationsForString = function (string) {
       if (lowerCaseChar === upperCaseChar) {
         return [prefix + ch];
       } else {
-        return [prefix + ch.toLowerCase(), prefix + ch.toUpperCase()];
+        return [prefix + lowerCaseChar, prefix + upperCaseChar];
       }
     }));
   }
