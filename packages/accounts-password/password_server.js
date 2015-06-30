@@ -92,10 +92,10 @@ var findUserFromQuery = function (query) {
     var fieldName;
     var fieldValue;
     if (query.username) {
-      fieldName = "username";
+      fieldName = 'username';
       fieldValue = query.username;
     } else if (query.email) {
-      fieldName = "emails.address";
+      fieldName = 'emails.address';
       fieldValue = query.email;
     } else {
       throw new Error("shouldn't happen (validation missed something)");
@@ -110,6 +110,8 @@ var findUserFromQuery = function (query) {
       // No match if multiple candidates are found
       if (candidateUsers.length === 1) {
         user = candidateUsers[0];
+      } else {
+        console.error('Found multiple users with ' + fieldName + ' = ' + fieldValue + ' only differing in case. Requiring case sensitive login.');
       }
     }
   }
