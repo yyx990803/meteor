@@ -787,14 +787,14 @@ var createUser = function (options) {
     // username or email, hence the _skipCaseInsensitiveChecksForTest check
 
     if (username &&
-      !Accounts._skipCaseInsensitiveChecksForTest[username] &&
+      !_.has(Accounts._skipCaseInsensitiveChecksForTest, username) &&
       Meteor.users.find(selectorForFastCaseInsensitiveLookup(
         "username", username)).count() > 1) {
           throw new Meteor.Error(403, "Username already exists.");
     }
 
     if (email &&
-      !Accounts._skipCaseInsensitiveChecksForTest[email] &&
+      !_.has(Accounts._skipCaseInsensitiveChecksForTest, email) &&
       Meteor.users.find(selectorForFastCaseInsensitiveLookup(
         "emails.address", email)).count() > 1) {
         throw new Meteor.Error(403, "Email already exists.");
