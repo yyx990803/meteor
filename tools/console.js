@@ -1305,4 +1305,3 @@ Console.prototype.readLine = function (options) {
 
 exports.Console = new Console;
 exports.Console.CARRIAGE_RETURN = CARRIAGE_RETURN;
-

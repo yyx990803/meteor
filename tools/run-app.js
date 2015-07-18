@@ -9,7 +9,7 @@ var release = require('./release.js');
 var buildmessage = require('./buildmessage.js');
 var runLog = require('./run-log.js');
 var stats = require('./stats.js');
-var cordova = require('./commands-cordova.js');
+import { getCordovaDependenciesFromStar } from './cordova/build.js';
 var Console = require('./console.js').Console;
 var catalog = require('./catalog.js');
 var Profile = require('./profile.js').Profile;
@@ -634,7 +634,7 @@ _.extend(AppRunner.prototype, {
     // from the first runner build.
     self.cordovaPlatforms = platforms;
 
-    var plugins = cordova.getCordovaDependenciesFromStar(
+    var plugins = getCordovaDependenciesFromStar(
       bundleResult.starManifest);
 
     if (self.cordovaPlugins && ! _.isEqual(self.cordovaPlugins, plugins)) {

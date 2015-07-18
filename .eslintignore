@@ -18,7 +18,6 @@ tools/catalog-remote.js
 tools/catalog.js
 tools/cleanup.js
 tools/colon-converter.js
-tools/commands-cordova.js
 tools/commands-packages-query.js
 tools/commands-packages.js
 tools/commands.js
