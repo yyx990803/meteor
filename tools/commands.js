@@ -409,7 +409,7 @@ function doRunCommand(options) {
 
   let mobileServerUrlString = mobileServerUrl.protocol + mobileServerUrl.host;
   if (mobileServerUrl.port) {
-    mobileServerUrlString.concat(`:${mobileServerUrl.port}`);
+    mobileServerUrlString += `:${mobileServerUrl.port}`;
   }
 
   var runAll = require('./run-all.js');
