@@ -58,17 +58,5 @@ Package.onUse(function(api) {
     'autoupdate'
   ], ['client', 'server']);
 
-  // More mobile specific implies
-  api.imply([
-    // Remove the 300ms click delay on mobile
-    'fastclick',
-    // Good defaults for the mobile status bar
-    'mobile-status-bar'
-  ], 'web.cordova');
-
-  api.imply([
-    // Launch screen configuration. Currently only on mobile but we include the
-    // no-op browser version anyway.
-    'launch-screen'
-  ], 'web');
+  api.imply("mobile-experience");
 });
