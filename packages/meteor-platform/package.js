@@ -11,21 +11,8 @@ Package.onUse(function(api) {
   // If you want, you can "meteor remove meteor-platform" and add some of
   // these back in individually. We haven't tested every subset, though :)
   api.imply([
-    // It's Log! It's better than bad, it's good!
-    'logging',
-    // Blaze: Reactive DOM!
-    'blaze',
-    'ui', // XXX COMPAT WITH PACKAGES BUILT FOR 0.9.0.
-    // A great template language!
-    'spacebars',
-    // Turn templates into views!
-    'templating',
     // Easy type assertions? check.
-    'check',
-    // Life isn't always predictable.
-    'random',
-    // People like being able to clone objects.
-    'ejson'
+    'check'
   ]);
 
   // These are useful too!  But you don't have to see their exports
@@ -40,5 +27,6 @@ Package.onUse(function(api) {
   api.imply("meteor-base");
   api.imply("mongo");
   api.imply("mobile-experience");
+  api.imply("blaze-html-templates");
   api.imply("session");
 });
