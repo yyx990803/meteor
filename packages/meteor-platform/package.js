@@ -13,8 +13,6 @@ Package.onUse(function(api) {
   api.imply([
     // It's Log! It's better than bad, it's good!
     'logging',
-    // The easiest way to get a little reactivity into your app.
-    'session',
     // Blaze: Reactive DOM!
     'blaze',
     'ui', // XXX COMPAT WITH PACKAGES BUILT FOR 0.9.0.
@@ -42,4 +40,5 @@ Package.onUse(function(api) {
   api.imply("meteor-base");
   api.imply("mongo");
   api.imply("mobile-experience");
+  api.imply("session");
 });
