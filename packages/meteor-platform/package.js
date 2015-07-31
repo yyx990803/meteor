@@ -10,10 +10,6 @@ Package.onUse(function(api) {
   //
   // If you want, you can "meteor remove meteor-platform" and add some of
   // these back in individually. We haven't tested every subset, though :)
-  api.imply([
-    // Easy type assertions? check.
-    'check'
-  ]);
 
   // These are useful too!  But you don't have to see their exports
   // unless you want to.
@@ -29,4 +25,8 @@ Package.onUse(function(api) {
   api.imply("mobile-experience");
   api.imply("blaze-html-templates");
   api.imply("session");
+
+  // The below are no longer in new Meteor apps by default, but are here for
+  // backwards compatibility
+  api.imply("check");
 });
