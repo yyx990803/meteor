@@ -4,13 +4,6 @@ Package.describe({
 });
 
 Package.onUse(function(api) {
-  // The "imply" here means that if your app uses "meteor-platform", it is
-  // treated as if it also directly included all of these packages (and it gets
-  // their exports, plugins, etc).
-  //
-  // If you want, you can "meteor remove meteor-platform" and add some of
-  // these back in individually. We haven't tested every subset, though :)
-
   // These are useful too!  But you don't have to see their exports
   // unless you want to.
   api.use([
