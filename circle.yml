@@ -1,0 +1,9 @@
+branches:
+  only:
+  - circle
+test:
+  override:
+  # test tools
+  # - ./meteor self-test
+  # test core packages
+  - ./packages/test-in-console/run.sh
