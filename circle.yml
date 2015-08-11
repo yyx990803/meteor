@@ -3,7 +3,7 @@ branches:
   - circle
 test:
   override:
-  # test tools
-  # - ./meteor self-test
   # test core packages
   - ./packages/test-in-console/run.sh
+  # test tools
+  - ./meteor self-test
